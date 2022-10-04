@@ -1,0 +1,12 @@
+#
+# ANSI colour escape sequences
+# https://en.wikipedia.org/wiki/ANSI_escape_code#3-bit_and_4-bit
+#
+COLOUR_BRIGHT_RED = "\033[1;31m"
+COLOUR_BRIGHT_GREEN = "\033[1;32m"
+COLOUR_BRIGHT_YELLOW = "\033[1;33m"
+COLOUR_BRIGHT_BLUE = "\033[1;33m"
+COLOUR_BRIGHT_MAGENTA = "\033[1;33m"
+COLOUR_BRIGHT_CYAN = "\033[1;36m"
+COLOUR_BRIGHT_WHITE = "\033[1;33m"
+COLOUR_RESET = "\033[0m"
