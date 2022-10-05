@@ -9,31 +9,52 @@ import FlugCredentials
 import FlugClient
 import logging
 
+# default locations for the config and token file
 DEFAULT_FLUGVOGEL_CONFIG_PATH = "config.json"
-DEFAULT_FLUGVOGEL_CREDENTIALS_PATH = "token.json"
+DEFAULT_FLUGVOGEL_TOKEN_PATH = "token.json"
+
+# default config keys for the main application
+DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG = "logConfig"
+DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FORMAT = "logFormat"
+DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FILE = "logFile"
+DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FILE_SIZE = "logFileSize"
+DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FILE_NUM = "logFileNum"
 
 class FlugVogel:
     version: str = None                           # The Version of the FlugVogel
     simulate: bool = None                         # Simulate/log commands, but don't execute them
+    cfgPath : str = None                          # Path to the config file
+    tokenPath : str = None                        # Path to the token file
     cfg : FlugConfig.FlugConfig = None            # FlugConfig instance
     creds: FlugCredentials.FlugCredentials = None # FlugCredentials instance
     _initSuccess = False # Set to `True` once initialization succeeded
 
-    def __init__(self, version: str, simulate: bool):
+    def __init__(self, version: str, configPath: str = DEFAULT_FLUGVOGEL_CONFIG_PATH, tokenPath: str = DEFAULT_FLUGVOGEL_TOKEN_PATH):
         # set up the logger
         FlugLoggerConfig.FlugLoggerConfig.init()
 
+        # set file paths
+        self.cfgPath = configPath
+        self.tokenPath = tokenPath
+
         # load the config
-        self.cfg = FlugConfig.FlugConfig(DEFAULT_FLUGVOGEL_CONFIG_PATH)
+        self.cfg = FlugConfig.FlugConfig(self.cfgPath)
         if not self.cfg.load():
             logging.critical("Failed to load FlugVogel-Config!")
 
             return
+        
         #set logger again with config
-        logCfg = self.cfg.getCfgObj()["logConfig"]
-        FlugLoggerConfig.FlugLoggerConfig.init(logFmt=logCfg["logFormat"], logFile=logCfg["logFile"], logFileSize=logCfg["logFileSize"], logFileNum=logCfg["logFileNum"])
+        logCfg = self.cfg.getCfgObj()[DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG]
+        FlugLoggerConfig.FlugLoggerConfig.init(
+            logFmt=logCfg[DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FORMAT],
+            logFile=logCfg[DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FILE],
+            logFileSize=logCfg[DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FILE_SIZE],
+            logFileNum=logCfg[DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FILE_NUM]
+        )
+
         # load the credentials
-        self.creds = FlugCredentials.FlugCredentials(DEFAULT_FLUGVOGEL_CREDENTIALS_PATH)
+        self.creds = FlugCredentials.FlugCredentials(self.tokenPath)
         
         if not self.creds.load():
             logging.critical("Failed to load FlugVogel-Credentials!")
@@ -168,6 +189,8 @@ class FlugVogel:
         client.run(self.creds.getToken())
 
 if __name__ == "__main__":
-    vogel = FlugVogel("0.0.1", False)
+    vogel = FlugVogel("0.0.1",
+        configPath=DEFAULT_FLUGVOGEL_CONFIG_PATH,
+        tokenPath=DEFAULT_FLUGVOGEL_TOKEN_PATH)
 
     vogel.flieg()
