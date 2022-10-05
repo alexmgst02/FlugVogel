@@ -6,6 +6,9 @@ import FlugUsers
 import FlugClient
 import FlugConfig
 from discord.utils import get
+
+
+
 def init(name: str, configFile: str,
         client: FlugClient.FlugClient,
         channels: FlugChannels.FlugChannels,
@@ -23,27 +26,29 @@ def init(name: str, configFile: str,
         logging.info(f"Config File for {name} has been loaded")
 
     cfgObj = cfg.c()
-    deleteTimer = cfgObj.get("messageDeleteCounter")
+    deleteTimer = cfgObj.get("messageDeleteTimer")
 
     
-    logChannelId = channels.getChannelConfig("log").get("id")
-    
+    logChannel = None
+    logChannelId = int(channels.getChannelConfig("log").get("id"))
+
+    @client.event
+    async def on_ready():
+        logChannel = client.get_channel(logChannelId)
     
     
     @client.event   
     async def on_message(message):
-        print(logChannelId)
-        logChannel = client.get_channel(1026808696556236852)
+        logChannel = client.get_channel(logChannelId)
         channelId = str(message.channel.id)
         # are we in the correct text channel?
         
         if message.author != client.user and channels.isChannelKnown(channelId) and channels.getChannelConfig(channelId).get("RoleHandling"):
            # are we allowed to assign a role? 
            authorId = str(message.author.id)
-           
            if users.isUserKnown(authorId) and users.getUserConfig(authorId).get("banned"):
-               logging.warning("Banned user has breached role adding channel. Action required")
-               await logChannel.send(f"Banned user {message.author.mention} has breached role adding channel. Action required")
+               logging.warning("Banned user has breached role adding channel. Action required.")
+               await logChannel.send(f"Banned user {message.author.mention} has breached role adding channel. Action required.")
                
            else:
     
@@ -58,9 +63,11 @@ def init(name: str, configFile: str,
                        await logChannel.send(f"{message.author.mention} assigned role {role.name}")
                        
                    else:
-                       await message.channel.send(f"Die Rolle {role.name} ist nicht assignable", delete_after=deleteTimer)
+                       await message.channel.send(f"Die Rolle {role.name} ist nicht assignable. {message.author.mention}", delete_after=deleteTimer)
 
                except Exception as e:
                    logging.warning(f"Role could not be assigned {e}")
                    await message.channel.send(f"Bitte so schreiben wie oben angegeben. {message.author.mention}", delete_after=deleteTimer)
-                   await logChannel.send(f"{message.author.mention} tried to assign {message.content}")      
+                   await logChannel.send(f"{message.author.mention} tried to assign {message.content}")
+
+           await message.delete()
