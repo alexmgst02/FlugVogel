@@ -41,5 +41,5 @@ class FlugRoles:
     def isRoleKnown(self, id: str) -> bool:
         return self.roleConfig.c().get(id, None) != None
 
-    def getroleConfig(self, id: str) -> dict:
+    def getRoleConfig(self, id: str) -> dict:
         return self.roleConfig.c().get(id, None)

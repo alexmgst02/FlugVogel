@@ -112,7 +112,7 @@ class FlugVogel:
             return
 
         # setup the client
-        intents = FlugClient.discord.Intents.default()
+        intents = FlugClient.discord.Intents.all()
         self.client = FlugClient.FlugClient(intents=intents,
             guildId=FlugClient.discord.Object(id=self.cfg.c().get(DEFAULT_FLUGVOGEL_CFG_KEY_GUILDID))
         )

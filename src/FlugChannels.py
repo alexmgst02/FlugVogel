@@ -41,5 +41,5 @@ class FlugChannels:
     def isChannelKnown(self, id: str) -> bool:
         return self.channelConfig.c().get(id, None) != None
 
-    def getchannelConfig(self, id: str) -> dict:
+    def getChannelConfig(self, id: str) -> dict:
         return self.channelConfig.c().get(id, None)
