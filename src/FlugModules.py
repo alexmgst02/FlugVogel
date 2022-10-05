@@ -1,14 +1,10 @@
 #
 # Handle Module Loading and initialization
 #
-from pydoc import cli
 import FlugChannels
 import FlugClient
 import FlugUsers
 import FlugRoles
-#
-# Thils file handles module loading & initialization
-#
 
 import FlugConfig
 
