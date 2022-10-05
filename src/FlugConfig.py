@@ -32,6 +32,7 @@ class FlugConfig:
         except Exception as e:
             logging.critical("Failed to load config from '%s'!" % self.cfgPath)
             logging.exception(e)
+            return False
 
         return True
 

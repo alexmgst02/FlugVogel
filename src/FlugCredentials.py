@@ -35,6 +35,7 @@ class FlugCredentials:
         except Exception as e:
             logging.critical("Failed to load credentials from '%s'!" % self.credPath)
             logging.exception(e)
+            return False
 
         return True
 
