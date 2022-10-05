@@ -87,7 +87,6 @@ class FlugVogel:
         intents = FlugClient.discord.Intents.default()
         client = FlugClient.FlugClient(intents=intents, guildId=FlugClient.discord.Object(id=1026808694773649449))
 
-
         @client.event
         async def on_ready():
             print(f'Logged in as {client.user} (ID: {client.user.id})')
@@ -186,7 +185,7 @@ class FlugVogel:
             await log_channel.send(embed=embed, view=url_view)
 
 
-        client.run(self.creds.getToken())
+        client.run(self.creds.getToken(), log_handler=None)
 
 if __name__ == "__main__":
     vogel = FlugVogel("0.0.1",
