@@ -5,35 +5,24 @@ import FlugConfig
 import logging
 
 class FlugChannels:
-    _channelConfig: dict = None      # store the channel config (pre-stage)
-    channelConfig: dict = None       # store the actual channel config
+    _channelConfigPath: dict = None             # store the channel config (pre-stage)
+    channelConfig: FlugConfig.FlugConfig = None # store the actual channel config (FlugConfig instance)
 
-    def __init__(self, channelConfig: any):
-        self._channelConfig = channelConfig
+    def __init__(self, channelConfigPath: str):
+        self._channelConfigPath = channelConfigPath
 
         return
 
     def load(self) -> bool:
-        # check whether it's a config or a path
-        if type(self._channelConfig) == dict:
-            self.channelConfig = self._channelConfig
-        elif type(self._channelConfig) == str:
-            # load the config file
-            cfg = FlugConfig.FlugConfig(self._channelConfig)
+        # load the config file
+        self.channelConfig = FlugConfig.FlugConfig(self._channelConfigPath)
 
-            if cfg.load() != True:
-                logging.critical("Failed to load Channel Config from '%s'!" % self._channelConfig)
-
-                return False
-
-            # copy the config
-            self.channelConfig = cfg.getCfgObj()
-        else:
-            logging.critical("'channelConfig' value of an unknown type (neither 'int' nor 'str'): %s" % str(self._channelConfig))
+        if self.channelConfig.load() != True:
+            logging.critical("Failed to load Channel Config from '%s'!" % self._channelConfigPath)
 
             return False
 
-        logging.info("Channel config loaded! It has %d entries!" % len(self.channelConfig.keys()))
+        logging.info("Channel config loaded! It has %d entries!" % len(self.channelConfig.c().keys()))
 
         return True
 
@@ -41,7 +30,7 @@ class FlugChannels:
         return self.channelConfig != None
 
     def doesChannelExist(self, id: str) -> bool:
-        return self.channelConfig.get(id, None) != None
+        return self.channelConfig.c().get(id, None) != None
 
-    def getChannelConfig(self, id: str) -> dict:
-        return self.channelConfig.get(id, None)
+    def getchannelConfig(self, id: str) -> dict:
+        return self.channelConfig.c().get(id, None)
