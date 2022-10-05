@@ -44,14 +44,20 @@ class FlugVogel:
         self.tokenPath = tokenPath
 
         # load the config
-        self.cfg = FlugConfig.FlugConfig(self.cfgPath)
+        self.cfg = FlugConfig.FlugConfig(self.cfgPath, backup=True)
+        
         if not self.cfg.load():
             logging.critical("Failed to load FlugVogel-Config!")
 
             return
+
+        if not self.cfg.save():
+            logging.critical("Failed to save FlugVogel-Config!")
+
+            return
         
         #set logger again with config
-        logCfg = self.cfg.getCfgObj()[DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG]
+        logCfg = self.cfg.c()[DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG]
 
         FlugLoggerConfig.FlugLoggerConfig.init(
             logFmt=logCfg[DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FORMAT],
@@ -70,7 +76,7 @@ class FlugVogel:
             return
 
         # setup the channel config
-        self.channels = FlugChannels.FlugChannels(self.cfg.getCfgObj()[DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS])
+        self.channels = FlugChannels.FlugChannels(self.cfg.c()[DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS])
 
         if not self.channels.load():
             logging.critical("Failed to load FlugVogel-Channels!")
@@ -113,7 +119,7 @@ class FlugVogel:
             id = str(message.channel.id)
 
             if self.channels.doesChannelExist(id):
-                channel = self.channels.getChannelConfig(id)
+                channel = self.channels.getchannelConfig(id)
                 
                 if channel.get("isPolitical") == True:
                     logging.info("Reacting to a political message in '%s'!" % message.channel.name)
