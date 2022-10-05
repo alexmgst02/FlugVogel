@@ -50,7 +50,8 @@ class FlugLoggerConfig:
             fh = logging.handlers.RotatingFileHandler(logFile, maxBytes=logFileSize, backupCount=logFileNum)
             fh.setFormatter(fmt)
             handlers.append(fh)
-
+            logging.root.handlers = []
+            
         # initialize and configure the logger
         logging.basicConfig(level = logLevel, format=logFmt, handlers=handlers)
         log = logging.getLogger("FlugLog")

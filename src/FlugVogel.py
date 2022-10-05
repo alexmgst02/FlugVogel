@@ -9,15 +9,14 @@ import FlugCredentials
 import FlugClient
 import logging
 
-DEFAULT_FLUGVOGEL_CONFIG_PATH = "../config.json"
-DEFAULT_FLUGVOGEL_CREDENTIALS_PATH = "../token.json"
+DEFAULT_FLUGVOGEL_CONFIG_PATH = "config.json"
+DEFAULT_FLUGVOGEL_CREDENTIALS_PATH = "token.json"
 
 class FlugVogel:
     version: str = None                           # The Version of the FlugVogel
     simulate: bool = None                         # Simulate/log commands, but don't execute them
     cfg : FlugConfig.FlugConfig = None            # FlugConfig instance
     creds: FlugCredentials.FlugCredentials = None # FlugCredentials instance
-
     _initSuccess = False # Set to `True` once initialization succeeded
 
     def __init__(self, version: str, simulate: bool):
@@ -30,7 +29,9 @@ class FlugVogel:
             logging.critical("Failed to load FlugVogel-Config!")
 
             return
-
+        #set logger again with config
+        logCfg = self.cfg.getCfgObj()["logConfig"]
+        FlugLoggerConfig.FlugLoggerConfig.init(logFmt=logCfg["logFormat"], logFile=logCfg["logFile"], logFileSize=logCfg["logFileSize"], logFileNum=logCfg["logFileNum"])
         # load the credentials
         self.creds = FlugCredentials.FlugCredentials(DEFAULT_FLUGVOGEL_CREDENTIALS_PATH)
         
