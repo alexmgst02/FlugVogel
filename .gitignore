@@ -1,4 +1,3 @@
-config.json
-token.json
+*.json
 __pycache__
 *.log
