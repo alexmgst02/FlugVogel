@@ -28,6 +28,7 @@ class FlugConfig:
         try:
             with open(self.cfgPath, "r") as fd:
                 self._cfgStr = fd.read()
+                self._cfgObj = json.load(fd)
         except Exception as e:
             logging.critical("Failed to load config from '%s'!" % self.cfgPath)
             logging.exception(e)
