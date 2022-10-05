@@ -5,7 +5,7 @@ import logging
 import logging.handlers
 import sys
 
-FLUG_LOGGER_DEFAULT_FMT = "[@ %(asctime)s]--[%(levelname)8s]--[%(funcName)20s()] %(message)s"
+FLUG_LOGGER_DEFAULT_FMT = "[@ %(asctime)s]--[%(levelname)8s]--[%(name)10s:%(funcName)20s()] %(message)s"
 
 class FlugLoggerConfig:
     @staticmethod
