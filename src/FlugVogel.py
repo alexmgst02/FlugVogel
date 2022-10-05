@@ -3,11 +3,13 @@
 #
 
 import random
+import sys
+import logging
 import FlugConfig
 import FlugLoggerConfig
 import FlugCredentials
+import FlugChannels
 import FlugClient
-import logging
 
 # default locations for the config and token file
 DEFAULT_FLUGVOGEL_CONFIG_PATH = "config.json"
@@ -21,6 +23,8 @@ DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FILE = "logFile"
 DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FILE_SIZE = "logFileSize"
 DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FILE_NUM = "logFileNum"
 
+DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS = "channels"
+
 class FlugVogel:
     version: str = None                           # The Version of the FlugVogel
     simulate: bool = None                         # Simulate/log commands, but don't execute them
@@ -28,6 +32,7 @@ class FlugVogel:
     tokenPath : str = None                        # Path to the token file
     cfg : FlugConfig.FlugConfig = None            # FlugConfig instance
     creds: FlugCredentials.FlugCredentials = None # FlugCredentials instance
+    channels : FlugChannels.FlugChannels = None   # FlugChannels instance
     _initSuccess = False # Set to `True` once initialization succeeded
 
     def __init__(self, version: str, configPath: str = DEFAULT_FLUGVOGEL_CONFIG_PATH, tokenPath: str = DEFAULT_FLUGVOGEL_TOKEN_PATH):
@@ -47,6 +52,7 @@ class FlugVogel:
         
         #set logger again with config
         logCfg = self.cfg.getCfgObj()[DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG]
+
         FlugLoggerConfig.FlugLoggerConfig.init(
             logFmt=logCfg[DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FORMAT],
             logLevel=logCfg[DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_LEVEL],
@@ -57,9 +63,17 @@ class FlugVogel:
 
         # load the credentials
         self.creds = FlugCredentials.FlugCredentials(self.tokenPath)
-        
+
         if not self.creds.load():
             logging.critical("Failed to load FlugVogel-Credentials!")
+
+            return
+
+        # setup the channel config
+        self.channels = FlugChannels.FlugChannels(self.cfg.getCfgObj()[DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS])
+
+        if not self.channels.load():
+            logging.critical("Failed to load FlugVogel-Channels!")
 
             return
 
@@ -94,6 +108,24 @@ class FlugVogel:
             print(f'Logged in as {client.user} (ID: {client.user.id})')
             print('------')
 
+        @client.event
+        async def on_message(message: FlugClient.discord.Message):
+            id = str(message.channel.id)
+
+            if self.channels.doesChannelExist(id):
+                channel = self.channels.getChannelConfig(id)
+                
+                if channel.get("isPolitical") == True:
+                    logging.info("Reacting to a political message in '%s'!" % message.channel.name)
+
+                    if message.author.id == 580306587156217856:
+                        await message.add_reaction("🤝")
+                    elif message.author.id == 282908150993125376:
+                        await message.add_reaction("🐟")
+                    else:
+                        await message.add_reaction("<:9462pepe9:1026820740403695646>")
+            else:
+                logging.info("Message (%s) from unknown channel '%s' (%s)!" % (message.content, id, message.channel.name))
 
         @client.tree.command()
         async def hello(interaction: FlugClient.discord.Interaction):
@@ -190,8 +222,12 @@ class FlugVogel:
         client.run(self.creds.getToken(), log_handler=None)
 
 if __name__ == "__main__":
-    vogel = FlugVogel("0.0.1",
-        configPath=DEFAULT_FLUGVOGEL_CONFIG_PATH,
-        tokenPath=DEFAULT_FLUGVOGEL_TOKEN_PATH)
+    # check for parameters
+    if len(sys.argv) < 3:
+        print("Usage: python3 %s <config_path> <token_path>" % (sys.argv[0]))
+
+        sys.exit(-1)
+
+    vogel = FlugVogel("0.0.1", configPath=sys.argv[1], tokenPath=sys.argv[2])
 
     vogel.flieg()
