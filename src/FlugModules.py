@@ -5,11 +5,18 @@ import FlugChannels
 import FlugClient
 import FlugUsers
 import FlugRoles
-
 import FlugConfig
+
+import modules.FlugModule
 
 import importlib
 import logging
+
+# config file field names
+DEFAULT_FLUGVOGEL_MODULES_CFG_NAME = "name"
+DEFAULT_FLUGVOGEL_MODULES_CFG_CONFIG = "config"
+DEFAULT_FLUGVOGEL_MODULES_CFG_OPTIONAL = "optional"
+DEFAULT_FLUGVOGEL_MODULES_CFG_ENABLED = "enabled"
 
 class FlugModules:
     _moduleConfigPath: dict = None             # store the module config path
@@ -58,36 +65,54 @@ class FlugModules:
 
         # iterator through all module entries
         for moduleCfg in self.moduleConfig.c():
-            module = None
-            instance = None
+            # check whether the module has a name
+            if moduleCfg.get(DEFAULT_FLUGVOGEL_MODULES_CFG_NAME, None) == None:
+                logging.critical("Invalid module entry without a name in module config!")
+
+                return False
+
+            # check whether the module should be loaded
+            if moduleCfg.get(DEFAULT_FLUGVOGEL_MODULES_CFG_ENABLED, False) == False:
+                logging.info("Skipping disabled module '%s'" % moduleCfg.get(DEFAULT_FLUGVOGEL_MODULES_CFG_NAME))
+
+                continue
             
             # import the module
             try:
-                module = importlib.import_module("modules." + moduleCfg.get("name"))
+                _module = importlib.import_module("modules." + moduleCfg.get(DEFAULT_FLUGVOGEL_MODULES_CFG_NAME))
+                _module_cls : modules.FlugModule.FlugModule = _module.CLASS
+            
             except Exception as e:
-                logging.critical("Failed to import module '%s'!" % moduleCfg.get("name"))
+                logging.critical("Failed to import module '%s'!" % moduleCfg.get(DEFAULT_FLUGVOGEL_MODULES_CFG_NAME))
                 logging.exception(e)
 
                 return False
             
             # initilize the module
             try:
-                instance = module.init(
+                module : modules.FlugModule.FlugModule = _module_cls(
                     moduleCfg.get("name"), moduleCfg.get("config"),
-                    self.client, self.channels, self.users, self.roles
+                    self.client, self.channels, self.roles, self.users
                 )
             except Exception as e:
-                logging.critical("Failed to initialize module '%s'!" % moduleCfg.get("name"))
+                logging.critical("Failed to initialize module '%s'!" % moduleCfg.get(DEFAULT_FLUGVOGEL_MODULES_CFG_NAME))
                 logging.exception(e)
 
-                return False
+                if moduleCfg.get(DEFAULT_FLUGVOGEL_MODULES_CFG_OPTIONAL):
+                    logging.info("Ignoring module load failure (optional = True)")
+                else:
+                    return False
 
-            self.moduleList.append({
-                "cfg": moduleCfg.get("name"),
-                "instance": instance
-            })
+            # run the module setup
+            if module.setup() != True:
+                logging.critical("Module setup for '%s' failed!" % moduleCfg.get(DEFAULT_FLUGVOGEL_MODULES_CFG_NAME))
 
-            logging.info("Loaded and initialized module '%s'!" % moduleCfg.get("name"))
+                if moduleCfg.get(DEFAULT_FLUGVOGEL_MODULES_CFG_OPTIONAL):
+                    logging.info("Ignoring module setup failure (optional = True)")
+                else:
+                    return False
+
+            logging.info("Loaded and initialized module '%s'!" % moduleCfg.get(DEFAULT_FLUGVOGEL_MODULES_CFG_NAME))
 
         return True
 

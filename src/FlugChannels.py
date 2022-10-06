@@ -2,10 +2,11 @@
 # Channel Information Handling
 #
 import FlugConfig
+
 import logging
 
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG = "log"
-DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_ROLE_HANDLING = "RoleHandling"
+DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_IS_ROLE_ASSIGNMENT = "isRoleAssignmentChannel"
 
 class FlugChannels:
     _channelConfigPath: dict = None             # store the channel config path
@@ -47,18 +48,18 @@ class FlugChannels:
     def getChannelConfig(self, id: str) -> dict:
         return self.channelConfig.c().get(id, None)
 
-    def getLogChannelId(self) -> int:
-        channel = self.getChannelConfig(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG)
-        if channel == None:
-            logging.critical("LogChannel could not be found")
-            return 0
-        channelId = channel.get("id")
-        if channelId == None:
-            logging.critical("LogChannelId could not be found")
-            return 0  
-        return int(channelId)
+    def getLogChannelId(self) -> str:
+        # get the config for the log channel
+        channelID = self.getChannelConfig(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG)
 
-    def isChannelRoleHandling(self, id: str) -> bool:
-        if self.isChannelKnown(id) and self.getChannelConfig(id).get(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_ROLE_HANDLING, False) == True:
-            return True
+        if channelID == None:
+            return None
+
+        return channelID
+
+    def isChannelRoleAssignment(self, id: str) -> bool:
+        if self.isChannelKnown(id):
+            if self.getChannelConfig(id).get(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_IS_ROLE_ASSIGNMENT, False) == True:
+                return True
+        
         return False 
