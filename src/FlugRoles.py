@@ -4,6 +4,8 @@
 import FlugConfig
 import logging
 
+DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_ASSIGNABLE = "assignable"
+
 class FlugRoles:
     _roleConfigPath: dict = None             # store the role config path
     roleConfig: FlugConfig.FlugConfig = None # store the actual role config (FlugConfig instance)
@@ -43,3 +45,8 @@ class FlugRoles:
 
     def getRoleConfig(self, id: str) -> dict:
         return self.roleConfig.c().get(id, None)
+
+    def isRoleAssignable(self, id: str) -> bool:
+        if self.isRoleKnown(id) and self.getRoleConfig(id).get(DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_ASSIGNABLE, False) == True:
+            return True
+        return False
