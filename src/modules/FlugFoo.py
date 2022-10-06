@@ -25,7 +25,7 @@ def init(name: str, configFile: str,
         id = str(message.channel.id)
 
         if channels.isChannelKnown(id):
-            channel = channels.getchannelConfig(id)
+            channel = channels.getChannelConfig(id)
             
             if channel.get("isPolitical") == True:
                 logging.info("Reacting to a political message in '%s'!" % message.channel.name)
