@@ -15,7 +15,7 @@ def init(name: str, configFile: str,
         users: FlugUsers.FlugUsers,
         roles: FlugRoles.FlugRoles):
     # greet-message
-    logging.info("I am '%s'! I go initialized with the config file '%s'!" % (name, configFile))
+    logging.info("I am '%s'! I got initialized with the config file '%s'!" % (name, configFile))
 
     cfg = FlugConfig.FlugConfig(cfgPath=configFile)
 

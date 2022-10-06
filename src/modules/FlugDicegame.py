@@ -13,7 +13,7 @@ def init(name: str, configFile: str,
         userConfig: FlugUsers.FlugUsers,
         roleConfig: FlugRoles.FlugRoles):
     # greet-message
-    logging.info("I am '%s'! I go initialized with the config file '%s'!" % (name, configFile))
+    logging.info("I am '%s'! I got initialized with the config file '%s'!" % (name, configFile))
 
     # setup the dice game
     @client.tree.command()
