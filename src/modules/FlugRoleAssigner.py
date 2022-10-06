@@ -78,7 +78,7 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
                 await logChannel.send(
                     f"Banned user '{message.author.name}' ({message.author.id}) should not be able to send in {message.channel.name} ({message.channel.id})!"
                 )
-
+                await message.delete()
                 return
 
             # have we entered an existing role name?
@@ -89,22 +89,19 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
 
                 await message.channel.send(f"Bitte so schreiben wie oben angegeben. {message.author.mention}", delete_after=deleteTimer)
                 await logChannel.send(f"{message.author.mention} ({message.author.id}) tried to assign the non-assignable role '{message.content}'!")
-
+                await message.delete()
                 return
 
             # is the role allowed to be assigned?
             if not self.roles.isRoleAssignable(str(role.id)):
                 await message.channel.send(f"{message.author.mention}, die Rolle '{role.name}' ist nicht zuteilbar.", delete_after=deleteTimer)
-
+                await message.delete()
                 return
             
             # add the role to the author
             await message.author.add_roles(role)
 
             await logChannel.send(f"Assigned role '{role.name}' to '{message.author.mention}' ({message.author.id})")
-
-            # delete the message after the delay has passed
-            time.sleep(deleteTimer)
 
             await message.delete()
 
