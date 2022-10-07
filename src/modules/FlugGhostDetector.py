@@ -150,11 +150,17 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
         @self.client.tree.command(description="Get the FlugGhostDetector Configuration")
         async def get_ghost_detector_config(interaction: discord.Interaction):
             # build an embed
-            embed = discord.Embed(title="🚧 Current Ghost Detector Config 🚧")
-            embed.description = json.dumps(self.cfg.c(), indent=4)
+            for role in interaction.user.roles:
+                if role.id in self.permittedRoleIds:
+                    embed = discord.Embed(title="🚧 Current Ghost Detector Config 🚧")
+                    embed.description = json.dumps(self.cfg.c(), indent=4)
 
-            await interaction.response.send_message(f"Config sent to {self.logChannel.mention}",ephemeral=True);
-            await self.logChannel.send(embed=embed)
+                    await interaction.response.send_message(f"Config sent to {self.logChannel.mention}",ephemeral=True);
+                    await self.logChannel.send(embed=embed)
+
+                    return
+                    
+            await interaction.response.send_message("Du darfst das nicht nutzen!", ephemeral=True)
 
         return True
 
