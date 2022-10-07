@@ -10,7 +10,11 @@ import FlugUsers
 import FlugConfig
 
 
-class FlugReportToModerators(modules.FlugModule.FlugModule):
+class FlugMessageReporter(modules.FlugModule.FlugModule):
+    cfg: FlugConfig.FlugConfig = None
+    reportChannelId: int = None
+    reportChannel: discord.abc.GuildChannel = None
+
     def __init__(self, moduleName: str, configFilePath: str,
             client: FlugClient.FlugClient = None,
             channels: FlugChannels.FlugChannels = None,
@@ -21,29 +25,24 @@ class FlugReportToModerators(modules.FlugModule.FlugModule):
 
         # greet-message
         logging.info("I am '%s'! I got initialized with the config file '%s'!" % (self.moduleName, self.configFilePath))
-
-        
         
     async def get_report_channel_on_ready(self):
         self.reportChannel = self.client.get_channel(self.reportChannelId)
 
         if self.reportChannel == None:
-            logging.critical(f"'{self.moduleName}' could not find the log channel ({logChannelId})!")
-    
+            logging.critical(f"'{self.moduleName}' could not find the report channel ({self.reportChannelId})!")
 
     def setup(self):
-        self.reportChannel : discord.Channel = None
-        
         # load the module config
         self.cfg = FlugConfig.FlugConfig(cfgPath=self.configFilePath)
 
         if self.cfg.load() != True:
             logging.critical(f"Could not load config for '{self.moduleName}' from '{self.configFilePath}'!")
+
             return False
         else:
             logging.info(f"Config for '{self.moduleName}' has been loaded from '{self.configFilePath}'!")
             
-        
         # fail if no report channel is configured
         self.reportChannelId = self.channels.getReportChannelId()
 
@@ -51,9 +50,11 @@ class FlugReportToModerators(modules.FlugModule.FlugModule):
             logging.critical(f"No ID found for the Report-Channel '{self.moduleName}'!")
 
             return False
+
+        # register self.get_report_channel_on_ready for on_ready
         self.client.addSubscriber("on_ready", self.get_report_channel_on_ready)
 
-        # This context menu command only works on messages
+        # register the context menu to report a message
         @self.client.tree.context_menu(name="Nachricht melden")
         async def report_message(interaction: discord.Interaction, message: discord.Message):
             # We're sending this response message with ephemeral=True, so only the command executor can see it
@@ -61,15 +62,18 @@ class FlugReportToModerators(modules.FlugModule.FlugModule):
                 f"Danke für das Melden der Nachricht von {message.author.mention}, die Moderatoren werden zeitnah reagieren.", ephemeral=True
             )
 
-            # Handle report by sending it into the report channel
-
-            embed = discord.Embed(title=f"{interaction.user.display_name} ({interaction.user.id}) reported message")
+            # Handle report by sending it into the report channels
+            embed = discord.Embed(
+                title=f"{interaction.user.display_name} ({interaction.user.id}) reported message"
+            )
+            
             if message.content:
                 embed.description = message.content
 
             embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
             embed.timestamp = message.created_at
 
+            # create a button linking to the reported message
             url_view = discord.ui.View()
             url_view.add_item(discord.ui.Button(label='Go to Message', style=discord.ButtonStyle.url, url=message.jump_url))
 
@@ -77,4 +81,4 @@ class FlugReportToModerators(modules.FlugModule.FlugModule):
         
         return True
 
-CLASS = FlugReportToModerators
+CLASS = FlugMessageReporter
