@@ -5,6 +5,7 @@ import FlugConfig
 import logging
 
 DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_ASSIGNABLE = "assignable"
+DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_NAME = "name"
 
 class FlugRoles:
     _roleConfigPath: dict = None             # store the role config path
