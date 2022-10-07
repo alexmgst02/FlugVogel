@@ -58,7 +58,7 @@ class FlugReportToModerators(modules.FlugModule.FlugModule):
         async def report_message(interaction: discord.Interaction, message: discord.Message):
             # We're sending this response message with ephemeral=True, so only the command executor can see it
             await interaction.response.send_message(
-                f"Danke für das Melden der Nachricht von {message.author.mention}, die Moderatoren werden zeitnah reagieren", ephemeral=True
+                f"Danke für das Melden der Nachricht von {message.author.mention}, die Moderatoren werden zeitnah reagieren.", ephemeral=True
             )
 
             # Handle report by sending it into the report channel
