@@ -34,7 +34,7 @@ class FlugDicegame(modules.FlugModule.FlugModule):
 
             if member.id == 580306587156217856: #lx00t
                 r1 = random.randint(1,5)
-                resp = "I rolled a %d. You got a %d. Fair game, champ! 🤝" % (r1, r1 + 1)
+                resp = "I rolled a %d. You got a %d. Fair game, loser! 🤝" % (r1, r1 - 4)
             else:
                 r1 = random.randint(2,6)
                 resp = "I rolled a %d. You got a %d. Lol, how can you be _that_ bad? <a:pepemeltdown:1026820761840783381>" % (r1, r1 - 1)
