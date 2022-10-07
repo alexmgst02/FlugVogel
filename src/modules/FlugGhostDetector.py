@@ -56,8 +56,8 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
 
         # determine whether the message is a reference and whether it's a ping (mention)
         reference = message.reference != None
-        ping = len(message.mentions) > 0 or len(message.role_mentions) > 0 or len(message.channel_mentions) > 0 or message.mention_everyone
-
+        ping = len(message.mentions) > 0 or len(message.role_mentions) > 0 or message.mention_everyone
+        
         # build the embed which reports the detected ghost reference/ping/message
         embed = discord.Embed(title="👻 Ghost Detector 👻")
         embed.set_author(name=message.author.display_name, icon_url=message.author.display_avatar.url)
@@ -148,11 +148,12 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             await interaction.response.send_message("Du darfst das nicht nutzen!", ephemeral=True)
 
         @self.client.tree.command(description="Get the FlugGhostDetector Configuration")
-        async def get_ghost_detector_config(interaction: discord.Integration):
+        async def get_ghost_detector_config(interaction: discord.Interaction):
             # build an embed
             embed = discord.Embed(title="🚧 Current Ghost Detector Config 🚧")
             embed.description = json.dumps(self.cfg.c(), indent=4)
 
+            await interaction.response.send_message(f"Config sent to {self.logChannel.mention}",ephemeral=True);
             await self.logChannel.send(embed=embed)
 
         return True
