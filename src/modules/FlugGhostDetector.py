@@ -134,7 +134,8 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
                     self.cfg.save()
 
                     # build an embed
-                    embed = discord.Embed(title="🚧 New Ghost Detector Config 🚧")
+                    embed = discord.Embed(title="🚧 New Ghost Detector Config 🚧",
+                                        color = discord.Color.dark_blue())
                     embed.description = f"New 'treshold': {treshold}\nNew 'only_pings': {only_pings}"
 
                     # respond to the user-only and send to the log channel
@@ -152,7 +153,8 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             # build an embed
             for role in interaction.user.roles:
                 if role.id in self.permittedRoleIds:
-                    embed = discord.Embed(title="🚧 Current Ghost Detector Config 🚧")
+                    embed = discord.Embed(title="🚧 Current Ghost Detector Config 🚧",
+                                        color = discord.Color.dark_blue())
                     embed.description = json.dumps(self.cfg.c(), indent=4)
 
                     await interaction.response.send_message(f"Config sent to {self.logChannel.mention}",ephemeral=True);
