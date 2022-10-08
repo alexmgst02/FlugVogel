@@ -295,4 +295,4 @@ async def statistic_updates():
             data_file.write(f"{key} : {value}\n")
     with open("dataset.txt" , "rb") as data_file:
         await log_channel.send("Dataset3: ", file=discord.File(data_file, "chatters.txt"))
-client.run("MTAyNjgxMTM5NDQ1ODM5MDU3MA.G9fJ62.rDxzqHjSArgPBEqpDX1bPGLa4bLMCearnXXO9s")
+client.runbPGLa4bLMXXO9s")
