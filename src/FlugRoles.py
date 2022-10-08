@@ -6,6 +6,8 @@ import logging
 
 DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_ASSIGNABLE = "assignable"
 DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_NAME = "name"
+DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_DEACTIVATED = "banned"
+
 
 class FlugRoles:
     _roleConfigPath: dict = None             # store the role config path
@@ -59,3 +61,6 @@ class FlugRoles:
         if self.isRoleKnown(id) and self.getRoleConfig(id).get(DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_ASSIGNABLE, False) == True:
             return True
         return False
+
+    def getDeactivationRole(self) -> int:
+        return self.getRoleConfig(DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_DEACTIVATED).get("id", None)

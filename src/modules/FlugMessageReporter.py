@@ -64,7 +64,8 @@ class FlugMessageReporter(modules.FlugModule.FlugModule):
 
             # Handle report by sending it into the report channels
             embed = discord.Embed(
-                title=f"{interaction.user.display_name} ({interaction.user.id}) reported message"
+                title=f"{interaction.user.display_name} ({interaction.user.id}) reported message",
+                color = discord.Color.dark_red()
             )
             
             if message.content:

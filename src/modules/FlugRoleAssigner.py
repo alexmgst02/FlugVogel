@@ -43,7 +43,7 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
             return
 
         # are we allowed to assign a role?
-        if self.users.isUserDeactivated(message.author.id):
+        if self.users.isUserDeactivated(str(message.author.id)):
             logging.warning(
                 f"Banned user '{message.author.name}' ({message.author.id}) should not be able to send in {message.channel.name} ({message.channel.id})!"
             )
