@@ -47,6 +47,14 @@ class FlugRoles:
     def getRoleConfig(self, id: str) -> dict:
         return self.roleConfig.c().get(id, None)
 
+    def getRoleID(self, name: str) -> int:
+        # go through all role configs
+        for key, config in self.roleConfig.c().items():
+            if config.get(DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_NAME, None) == name:
+                return int(key)
+
+        return None
+
     def isRoleAssignable(self, id: str) -> bool:
         if self.isRoleKnown(id) and self.getRoleConfig(id).get(DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_ASSIGNABLE, False) == True:
             return True

@@ -5,6 +5,7 @@ import FlugConfig
 import logging
 
 DEFAULT_FLUGVOGEL_CFG_KEY_USERS_DEACTIVATED = "banned"
+DEFAULT_FLUGVOGEL_CFG_KEY_USERS_NAME = "name"
 
 class FlugUsers:
     _userConfigPath: dict = None             # store the user config path
@@ -45,6 +46,14 @@ class FlugUsers:
 
     def getUserConfig(self, id: str) -> dict:
         return self.userConfig.c().get(id, None)
+
+    def getUserID(self, name: str) -> int:
+        # go through all user configs
+        for key, config in self.userConfig.c().items():
+            if config.get(DEFAULT_FLUGVOGEL_CFG_KEY_USERS_NAME, None) == name:
+                return int(key)
+
+        return None
 
     def isUserDeactivated(self, id: str) -> bool:
         if self.isUserKnown(id) and self.getUserConfig(id).get(DEFAULT_FLUGVOGEL_CFG_KEY_USERS_DEACTIVATED, False) == True:
