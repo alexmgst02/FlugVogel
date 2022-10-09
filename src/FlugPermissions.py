@@ -57,7 +57,7 @@ class FlugPermissions:
                 "targetMemberAllowlist": [], /* memberIDs that can be targeted by the command - ignored if defaultTargetAllow is true */
                 "targetMemberBlocklist": [], /* memberIDs that can't be targeted by the command - ignored if defaultAllow is false */
                 "targetRoleAllowlist": [],   /* RoleIDs that can be targeted by the command - ignored if defaultTargetAllow is true */
-                "targetRoleBlocklist": [],   /* RoleIDs that can't be targeted by the command - ignored if defaultAllow is false */
+                "targetRoleBlocklist": [],   /* RoleIDs that can't be targeted by the command - ignored if defaultTargetAllow is false */
             }
         }
         ```

@@ -182,9 +182,9 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
         )
         async def set_ghost_detector_config(interaction: discord.Interaction, treshold: int, only_pings: bool, ghostping_log_size: int):
             # check the permissions
-            perms = self.permissions.canDo(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_SET_GHOST_DETECTOR_CONFIG, discord.user, None)
+            perms = self.permissions.canDo(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_SET_GHOST_DETECTOR_CONFIG, interaction.user, None)
 
-            if perms < FlugPermissions.FlugPermissions.CAN_DO_WEAK_NO:
+            if perms < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
                 await interaction.response.send_message("Sie dürfen diesen Befehl nicht benutzen! Dieser Vorfall wird gemeldet 🚔!", ephemeral=True)
 
                 return
@@ -214,7 +214,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             # check the permissions
             perms = self.permissions.canDo(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_GET_GHOST_DETECTOR_CONFIG, interaction.user, None)
 
-            if perms < FlugPermissions.FlugPermissions.CAN_DO_WEAK_NO:
+            if perms < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
                 await interaction.response.send_message("Sie dürfen diesen Befehl nicht benutzen! Dieser Vorfall wird gemeldet 🚔!", ephemeral=True)
 
                 return
@@ -241,7 +241,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
                 )
 
                 # if the perms don't resolve, abort
-                if perms <= FlugPermissions.FlugPermissions.CAN_DO_WEAK_NO:
+                if perms < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
                     logging.info(
                         f"User {interaction.user.name} ({interaction.user.id}) tried to see" +
                         f"Ghostpings for user {subjekt.name} ({subjekt.id}) - {FlugPermissions.FlugPermissions.CAN_DO_STRINGS[perms]}"
