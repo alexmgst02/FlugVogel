@@ -241,7 +241,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
                 )
 
                 # if the perms don't resolve, abort
-                if perms <= FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
+                if perms < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
                     logging.info(
                         f"User {interaction.user.name} ({interaction.user.id}) tried to see" +
                         f"Ghostpings for user {subjekt.name} ({subjekt.id}) - {FlugPermissions.FlugPermissions.CAN_DO_STRINGS[perms]}"
