@@ -11,6 +11,7 @@ import FlugRoles
 import FlugUsers
 import FlugConfig
 import FlugPermissions
+import util.flugPermissionsHelper
 
 # config keys
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_THRESHOLD = "threshold"
@@ -33,7 +34,7 @@ DEFAULT_FLUGVOGEL_GHOSTPING_LOG_ID = "id"
 DEFAULT_FLUGVOGEL_GHOSTPING_LOG_TS = "ts"
 
 class FlugGhostDetector(modules.FlugModule.FlugModule):
-    logChannel: discord.abc.GuildChannel
+    logChannel: discord.TextChannel
     logChannelId: int = None
     onlyPings: bool = None
     treshold: int = None
@@ -60,7 +61,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             users: FlugUsers.FlugUsers = None):
         # setup the super class
         super().__init__(moduleName, configFilePath, client, channels, roles, users)
-
+        
         # greet-message
         logging.info("I am '%s'! I got initialized with the config file '%s'!" % (self.moduleName, self.configFilePath))
 
@@ -182,9 +183,8 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
         )
         async def set_ghost_detector_config(interaction: discord.Interaction, treshold: int, only_pings: bool, ghostping_log_size: int):
             # check the permissions
-            perms = self.permissions.canDo(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_SET_GHOST_DETECTOR_CONFIG, interaction.user, None)
-
-            if perms < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
+            if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_SET_GHOST_DETECTOR_CONFIG,
+                interaction.user, None, self.permissions, self.logChannel):
                 await interaction.response.send_message("Sie dürfen diesen Befehl nicht benutzen! Dieser Vorfall wird gemeldet 🚔!", ephemeral=True)
 
                 return
@@ -212,10 +212,9 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
         @self.client.tree.command(description="Get the FlugGhostDetector Configuration")
         async def get_ghost_detector_config(interaction: discord.Interaction):
             # check the permissions
-            perms = self.permissions.canDo(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_GET_GHOST_DETECTOR_CONFIG, interaction.user, None)
-
-            if perms < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
-                await interaction.response.send_message("Sie dürfen diesen Befehl nicht benutzen! Dieser Vorfall wird gemeldet 🚔!", ephemeral=True)
+            if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_GET_GHOST_DETECTOR_CONFIG,
+                interaction.user, None, self.permissions, self.logChannel):
+                await interaction.response.send_message("Die Nutzung dieses Befehls ist für Sie untersagt! Dieser Vorfall wird gemeldet 🚔!", ephemeral=True)
 
                 return
 
@@ -226,26 +225,15 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             await interaction.response.send_message(f"Config sent to {self.logChannel.mention}", ephemeral=True)
             await self.logChannel.send(embed=embed)
 
-        @self.client.tree.command(description="Erhalte eine Liste von Leuten die dich gegeisterpinged haben.")
+        @self.client.tree.command(description="Erhalten Sie eine Liste von Nutzern welche Sie gegeisterpinged haben.")
         @discord.app_commands.describe(
             subjekt="Nutzer für welchen die Ghostpings ermittelt werden sollen."
         )
         async def zeige_geister_pings(interaction: discord.Interaction, subjekt: discord.Member = None):
-            interaction.response.defer()
-
             # if the user wants to get ghostpings for another user, check the perms
             if subjekt != None and subjekt.id != interaction.user.id:
-                perms = self.permissions.canDo(
-                    DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_ZEIGE_GEISTER_PINGS_OTHER_USER, 
-                    interaction.user, subjekt
-                )
-
-                # if the perms don't resolve, abort
-                if perms < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
-                    logging.info(
-                        f"User {interaction.user.name} ({interaction.user.id}) tried to see" +
-                        f"Ghostpings for user {subjekt.name} ({subjekt.id}) - {FlugPermissions.FlugPermissions.CAN_DO_STRINGS[perms]}"
-                    )
+                if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_ZEIGE_GEISTER_PINGS_OTHER_USER,
+                    interaction.user, subjekt, self.permissions, self.logChannel):
 
                     await interaction.response.send_message(
                         f"Ihnen fehlen die nötigen Befugnisse um die Geisterpings für {subjekt.mention} einzusehen! Dieser Vorfall wird gemeldet 🚔.", ephemeral=True
@@ -268,7 +256,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             if len(pings) == 1:
                 embed.description = "Es liegt ein Geisterping gegen sie vor! Folgend die verantwortliche Person:\n"
             else:
-                embed.description = f"Es liegen {len(pings)} Geisterpings gegen Sie vor!"
+                embed.description = f"Es liegen {len(pings)} Geisterpings gegen {target.mention}!"
 
                 if len(pings) != 0:
                     embed.description += " Folgend die verantwortlichen Personen:\n"
