@@ -237,7 +237,13 @@ class FlugPermissions:
         )
 
     def canRolesDo(self, commandName: str, roles: typing.List[discord.Role]) -> int:
-        """Checks whether every role in a list is allowed to execute a given command
+        """Checks whether the roles allow a given command.
+
+        Roles allow a command, if:
+        1. The default is allow and there is no explicit forbid for any role
+        2. The At least one role gives and explicit allow and there is no explicit forbid for any role
+
+        In all other cases, the command is not allowed.
         
         `commandName` Name of the command to check for (`str`)
 
@@ -245,14 +251,18 @@ class FlugPermissions:
 
         Returns `FlugPermissions.CAN_DO*`.
         """
-        ret = self.CAN_DO_HARD_YES
+        ret = FlugPermissions.CAN_DO_HARD_YES
 
         for role in roles:
             r = self.canRoleDo(commandName, role)
 
-            # return if the command is unknown
-            if r == self.CAN_DO_CMD_UNKNOWN:
+            # return if the command is unknown or HARD_NO
+            if r in [FlugPermissions.CAN_DO_CMD_UNKNOWN, FlugPermissions.CAN_DO_HARD_NO]:
                 return r
+
+            # if the current one is HARD_YES, only a HARD_NO can overwrite
+            if ret == FlugPermissions.CAN_DO_HARD_YES and r != FlugPermissions.CAN_DO_HARD_NO:
+                continue
 
             # use it if it's smaller than the current one
             ret = r if r < ret else ret
