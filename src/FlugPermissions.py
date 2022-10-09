@@ -62,6 +62,7 @@ class FlugPermissions:
         }
         ```
         User setting overwrites roles setting overwrites default setting.
+        It is important to note that the defaults (`defaultAllow` and `defaultTargetAllow`) are valid for members and roles.
 
         `roles` (`FlugRoles.FlugRoles`) and `members` (`FlugUsers.FlugUsers`) are needed to revolve Member/Role names to IDs.
         """
@@ -203,7 +204,8 @@ class FlugPermissions:
         # check whether the role is in an explicit allow list
         if util.isInList.isInList(str(id), self.permissionsDict.get(commandName).get(allowListKey, None)):
             return self.CAN_DO_HARD_YES
-        
+
+        # command isn't explicitly allowed or forbidden and also not allowed by default - default forbidden
         return self.CAN_DO_WEAK_NO
 
     def canRoleDo(self, commandName: str, role: discord.Role) -> int:
@@ -241,9 +243,7 @@ class FlugPermissions:
 
         Roles allow a command, if:
         1. The default is allow and there is no explicit forbid for any role
-        2. The At least one role gives and explicit allow and there is no explicit forbid for any role
-
-        In all other cases, the command is not allowed.
+        2. At least one role gives and explicit allow and there is no explicit forbid for any role
         
         `commandName` Name of the command to check for (`str`)
 
@@ -251,7 +251,11 @@ class FlugPermissions:
 
         Returns `FlugPermissions.CAN_DO*`.
         """
-        ret = FlugPermissions.CAN_DO_HARD_YES
+        # set the default as the initial value
+        if self.permissionsDict.get(commandName).get(FLUG_PERMISSIONS_CFG_DEFAULT_ALLOW):
+            ret = FlugPermissions.CAN_DO_WEAK_YES
+        else:
+            ret = FlugPermissions.CAN_DO_WEAK_NO
 
         for role in roles:
             r = self.canRoleDo(commandName, role)
@@ -260,35 +264,53 @@ class FlugPermissions:
             if r in [FlugPermissions.CAN_DO_CMD_UNKNOWN, FlugPermissions.CAN_DO_HARD_NO]:
                 return r
 
-            # if the current one is HARD_YES, only a HARD_NO can overwrite
-            if ret == FlugPermissions.CAN_DO_HARD_YES and r != FlugPermissions.CAN_DO_HARD_NO:
+            # the current value is neither CMD_UNKNOWN nor HARD_NO; HARD_YES can overwrite
+            if r == FlugPermissions.CAN_DO_HARD_YES:
+                ret = r 
+
                 continue
 
-            # use it if it's smaller than the current one
-            ret = r if r < ret else ret
+            # current value is WEAK_YES or WEAK_NO; this doesn't need to be adjusted
+            # (as the default value must be the same for all elements)
+            continue
 
         return ret
 
     def canRolesBeTargeted(self, commandName: str, roles: typing.List[discord.Role]) -> int:
-        """Checks whether every role in a list is allowed to to be targeted by a given command
+        """Checks whether the roles are allowed to to be targeted by a given command
         
+        Roles can be targeted by a command, if:
+        1. The default is allow and there is no explicit forbid for any role
+        2. At least one role gives and explicit allow and there is no explicit forbid for any role
+
         `commandName` Name of the command to check for (`str`)
 
         `roles` List of roles to check for (`typing.List[discord.Role]`)
 
         Returns `FlugPermissions.CAN_DO*`.
         """
-        ret = self.CAN_DO_HARD_YES
+        # set the default as the initial value
+        if self.permissionsDict.get(commandName).get(FLUG_PERMISSIONS_CFG_DEFAULT_TARGET_ALLOW):
+            ret = FlugPermissions.CAN_DO_WEAK_YES
+        else:
+            ret = FlugPermissions.CAN_DO_WEAK_NO
 
         for role in roles:
-            r = self.canRoleBeTargeted(commandName, role)
+            r = self.canRoleDo(commandName, role)
 
-            # return if the command is unknown
-            if r == self.CAN_DO_CMD_UNKNOWN:
+            # return if the command is unknown or HARD_NO
+            if r in [FlugPermissions.CAN_DO_CMD_UNKNOWN, FlugPermissions.CAN_DO_HARD_NO]:
                 return r
 
-            # use it if it's smaller than the current one
-            ret = r if r < ret else ret
+            # the current value is neither CMD_UNKNOWN nor HARD_NO; HARD_YES can overwrite
+            if r == FlugPermissions.CAN_DO_HARD_YES:
+                ret = r 
+
+                continue
+
+            # current value is WEAK_YES or WEAK_NO; this doesn't need to be adjusted
+            # (as the default value must be the same for all elements)
+            continue
 
         return ret
 
