@@ -18,6 +18,7 @@ DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_THRESHOLD = "threshold"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_ONLY_PINGS = "onlyPings"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS = "permissions"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_LOG_SIZE = "ghostPingLogSize"
+DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS = "ignoreChannels"
 
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_ZEIGE_GEISTER_PINGS_OTHER_USER = "zeige_geister_pings_other_user"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_SET_GHOST_DETECTOR_CONFIG = "set_ghost_detector_config"
@@ -72,6 +73,10 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             logging.critical(f"'{self.moduleName}' could not find the log channel ({self.logChannelId})!")
 
     async def detect_ghost_on_message_delete(self, message : discord.Message):
+        #dont pay attention to channels to be ignored
+        if self.channels.isChannelKnown(str(message.channel.id)) and (self.channels.getChannelConfig(str(message.channel.id)).get("name") in self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS)):
+            return
+
         # get the relevant config values
         self.threshold = self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_THRESHOLD, DEFAULT_FLUGVOGEL_GHOSTDETECTOR_TRESHOLD)
         self.onlyPings = self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_ONLY_PINGS, DEFAULT_FLUGVOGEL_GHOSTDETECTOR_ONLYPINGS)

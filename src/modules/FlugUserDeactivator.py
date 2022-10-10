@@ -1,4 +1,3 @@
-from dis import dis, disco
 import logging
 
 import discord

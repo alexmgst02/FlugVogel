@@ -29,7 +29,7 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
         self.logChannel = self.client.get_channel(self.logChannelId)
 
         if self.logChannel == None:
-            logging.critical(f"'{self.moduleName}' could not find the log channel ({logChannelId})!")
+            logging.critical(f"'{self.moduleName}' could not find the log channel ({self.logChannelId})!")
     
     
     async def process_message(self, message: discord.Message):
@@ -57,25 +57,30 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
         # have we entered an existing role name?
         role = discord.utils.get(message.guild.roles, name=message.content)
 
+        embed = discord.Embed(title=f"{self.moduleName}",
+                                color=discord.Color.blue())
+
         if role == None:
             logging.warning(f"Role could not be assigned {message.content}")
-
+            embed.description = f"{message.author.mention} ({message.author.id}) tried to assign the non-existing role '{message.content}'!"
             await message.channel.send(f"Bitte so schreiben wie oben angegeben. {message.author.mention}", delete_after=self.deleteTimer)
-            await self.logChannel.send(f"{message.author.mention} ({message.author.id}) tried to assign the non-existing role '{message.content}'!")
+            await self.logChannel.send(embed=embed)
             await message.delete()
             return
 
         # is the role allowed to be assigned?
         if not self.roles.isRoleAssignable(str(role.id)):
             await message.channel.send(f"{message.author.mention}, die Rolle '{role.name}' ist nicht zuteilbar.", delete_after=self.deleteTimer)
-            await self.logChannel.send(f"{message.author.mention} ({message.author.id}) tried to assign non-assignable role '{message.content}'!")
+            embed.description = f"{message.author.mention} ({message.author.id}) tried to assign non-assignable role '{message.content}'!"
+            await self.logChannel.send(embed=embed)
             await message.delete()
             return
         
         # add the role to the author
         await message.author.add_roles(role)
 
-        await self.logChannel.send(f"Assigned role '{role.name}' to '{message.author.mention}' ({message.author.id})")
+        embed.description = f"Assigned role '{role.name}' to '{message.author.mention}' ({message.author.id})"
+        await self.logChannel.send(embed=embed)
 
         await message.delete()
 
