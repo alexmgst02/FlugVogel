@@ -296,7 +296,7 @@ class FlugPermissions:
             ret = FlugPermissions.CAN_DO_WEAK_NO
 
         for role in roles:
-            r = self.canRoleDo(commandName, role)
+            r = self.canRoleBeTargeted(commandName, role)
 
             # return if the command is unknown or HARD_NO
             if r in [FlugPermissions.CAN_DO_CMD_UNKNOWN, FlugPermissions.CAN_DO_HARD_NO]:

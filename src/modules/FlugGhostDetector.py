@@ -276,7 +276,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
 
         @self.client.tree.command(description="Entleere Ihr persönliches Geisterpingpostfach.")
         async def entleere_geister_pings(interaction: discord.Interaction):
-            interaction.response.defer()
+            await interaction.response.defer(ephemeral=True, thinking=False)
 
             # get the pings
             pings = self.ghostPingLog.get(str(interaction.user.id), []) 
@@ -284,13 +284,13 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             l = len(pings)
 
             if l == 0:
-                await interaction.response.send_message("Ihr Geisterpingpostfach ist bereits entleert 📯!", ephemeral=True)
+                await interaction.followup.send("Ihr Geisterpingpostfach ist bereits entleert 📯!", ephemeral=True)
             else:
                 self.ghostPingLog.update({
                     str(interaction.user.id): []
                 })
 
-                await interaction.response.send_message(f"Es wurden {l} Elemente aus ihrem Geisterpingpostfach entfernt 📯!", ephemeral=True)
+                await interaction.followup.send(f"Es wurden {l} Elemente aus ihrem Geisterpingpostfach entfernt 📯!", ephemeral=True)
 
             return
 
