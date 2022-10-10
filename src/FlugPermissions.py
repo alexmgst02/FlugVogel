@@ -98,9 +98,9 @@ class FlugPermissions:
                 tmp = self.__memberNameList2IDList__(permissionsDict.get(command).get(listKey))
 
                 if tmp == None:
-                    logging.critical("Failed to translate UserName list into UserID list!")
+                    logging.critical("Failed to translate UserName list into UserID list! List: %s " % str(permissionsDict.get(command).get(listKey)))
                     
-                    raise ValueError("Failed to translate UserName list into UserID list!")
+                    raise ValueError("Failed to translate UserName list into UserID list! List: %s " % str(permissionsDict.get(command).get(listKey)))
 
                 self.permissionsDict.get(command).update({listKey: tmp})
                 
@@ -110,9 +110,9 @@ class FlugPermissions:
                 tmp = self.__roleNameList2IDList__(permissionsDict.get(command).get(listKey))
 
                 if tmp == None:
-                    logging.critical("Failed to translate RoleName list into RoleID list!")
+                    logging.critical("Failed to translate RoleName list into RoleID list! List: %s " % str(permissionsDict.get(command).get(listKey)))
                     
-                    raise ValueError("Failed to translate RoleName list into RoleID list!")
+                    raise ValueError("Failed to translate RoleName list into RoleID list! List: %s " % str(permissionsDict.get(command).get(listKey)))
 
                 self.permissionsDict.get(command).update({listKey: tmp})
 
