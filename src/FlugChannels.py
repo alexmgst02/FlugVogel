@@ -7,6 +7,7 @@ import logging
 
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG = "log"
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_REPORT = "report"
+DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_NAME = "name"
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_IS_ROLE_ASSIGNMENT = "isRoleAssignmentChannel"
 
 class FlugChannels:
@@ -48,6 +49,14 @@ class FlugChannels:
 
     def getChannelConfig(self, id: str) -> dict:
         return self.channelConfig.c().get(id, None)
+
+    def getChannelName(self, id: str) -> str:
+        cfg = self.getChannelConfig(id)
+
+        if cfg == None:
+            return None
+        
+        return cfg.get(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_NAME)
 
     def getLogChannelId(self) -> int:
         # get the config for the log channel
