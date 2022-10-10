@@ -1,6 +1,8 @@
+from calendar import c
 import logging
 import datetime
 import json
+import typing
 
 import discord
 
@@ -41,7 +43,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
     treshold: int = None
     ghostPingLogSize: int = None
     permissions: FlugPermissions.FlugPermissions = None
-
+    ignoreChannels :typing.List[str] = None
 
     #
     # GhostPingLog which stores ghost pings so that users can check for it later; format:
@@ -74,7 +76,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
 
     async def detect_ghost_on_message_delete(self, message : discord.Message):
         #dont pay attention to channels to be ignored
-        if self.channels.isChannelKnown(str(message.channel.id)) and (self.channels.getChannelConfig(str(message.channel.id)).get("name") in self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS)):
+        if self.channels.isChannelKnown(str(message.channel.id)) and self.channels.getChannelConfig(str(message.channel.id)).get("name") in self.ignoreChannels:
             return
 
         # get the relevant config values
@@ -147,6 +149,11 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
         else:
             logging.info(f"Config for '{self.moduleName}' has been loaded from '{self.configFilePath}'!")
 
+        
+        self.ignoreChannels = self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS)
+        if self.ignoreChannels == None:
+            self.ignoreChannels = []
+    
         # initialize the permission config
         try:
             self.permissions = FlugPermissions.FlugPermissions(
