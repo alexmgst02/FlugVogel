@@ -14,6 +14,7 @@ import FlugUsers
 import FlugConfig
 import FlugPermissions
 import util.flugPermissionsHelper
+import util.isInList
 
 # config keys
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_THRESHOLD = "threshold"
@@ -43,7 +44,6 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
     treshold: int = None
     ghostPingLogSize: int = None
     permissions: FlugPermissions.FlugPermissions = None
-    ignoreChannels :typing.List[str] = None
 
     #
     # GhostPingLog which stores ghost pings so that users can check for it later; format:
@@ -75,9 +75,13 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             logging.critical(f"'{self.moduleName}' could not find the log channel ({self.logChannelId})!")
 
     async def detect_ghost_on_message_delete(self, message : discord.Message):
-        #dont pay attention to channels to be ignored
-        if self.channels.isChannelKnown(str(message.channel.id)) and self.channels.getChannelConfig(str(message.channel.id)).get("name") in self.ignoreChannels:
-            return
+        # check whether the channel is known (explicit config exists)
+        if self.channels.isChannelKnown(str(message.channel.id)):
+            # check whether the channel is in the ignore list
+            if util.isInList.isInList(
+                self.channels.getChannelName(str(message.channel.id)),
+                self.config.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS)):
+                return
 
         # get the relevant config values
         self.threshold = self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_THRESHOLD, DEFAULT_FLUGVOGEL_GHOSTDETECTOR_TRESHOLD)
@@ -148,11 +152,6 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             return False
         else:
             logging.info(f"Config for '{self.moduleName}' has been loaded from '{self.configFilePath}'!")
-
-        
-        self.ignoreChannels = self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS)
-        if self.ignoreChannels == None:
-            self.ignoreChannels = []
     
         # initialize the permission config
         try:
