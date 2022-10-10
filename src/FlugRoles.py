@@ -66,4 +66,5 @@ class FlugRoles:
         roleId = self.getRoleConfig(DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_DEACTIVATED).get("id", None)
         if roleId == None:
             return None
+
         return int(roleId)
