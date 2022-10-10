@@ -1,3 +1,4 @@
+from dis import dis, disco
 import logging
 
 import discord
@@ -15,7 +16,7 @@ import util.flugPermissionsHelper
 DEFAULT_FLUGVOGEL_USER_DEACTIVATOR_CFG_PERMISSIONS = "permissions"
 
 DEFAULT_FLUGVOGEL_USER_DEACTIVATOR_CFG_PERMISSIONS_DEACTIVATE_USER = "deactivate_user"
-
+DEFAULT_FLUGVOGEL_USER_DEACTIVATOR_CFG_PERMISSIONS_ACTIVATE_USER = "activate_user"
 
 class FlugUserDeactivator(modules.FlugModule.FlugModule):
     logChannel: discord.abc.GuildChannel
@@ -97,6 +98,38 @@ class FlugUserDeactivator(modules.FlugModule.FlugModule):
         # register the event handlers
         self.client.addSubscriber('on_ready', self.on_ready)
         self.client.addSubscriber('on_member_join', self.member_join)
+
+        #Slash Command to re-activate member
+        @self.client.tree.command(description="Reactivate a user")
+        @discord.app_commands.describe(
+            member="Member to reactivate"
+        )
+        async def activate(interaction : discord.Interaction, member : discord.Member):
+            await interaction.response.defer(ephemeral=True, thinking=False)
+
+            if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_USER_DEACTIVATOR_CFG_PERMISSIONS_ACTIVATE_USER, interaction.user, member, self.permissions, self.logChannel):
+                await interaction.followup.send("Die Nutzung dieses Befehls ist für Sie untersagt! Dieser Vorfall wird gemeldet 🚔!")
+                return
+
+            #remove ban role
+            await member.remove_roles(discord.utils.get(interaction.guild.roles, id=self.deactivationRoleId))
+
+            #update the config entry
+            entry = self.users.userConfig.c().get(str(member.id))
+            if entry == None:
+                entry = {}
+                        
+            entry.update({FlugRoles.DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_DEACTIVATED:False})
+            self.users.userConfig.c().update({str(member.id):entry})
+            self.users.save()
+
+            embed = discord.Embed(title="👼User has been reactivated👼",
+                                            color=discord.Colour.green())
+            embed.description = f"{interaction.user.mention} reactivated {member.mention}."
+            await self.logChannel.send(embed=embed)
+            await interaction.followup.send(f"Success: {self.logChannel.mention}.")
+            
+
         #Slash Command to deactivate member
         @self.client.tree.command(description="Deactivate a user")
         @discord.app_commands.describe(
@@ -104,9 +137,9 @@ class FlugUserDeactivator(modules.FlugModule.FlugModule):
             reason="Why should the member be deactivated"
         )
         async def deactivate(interaction : discord.Interaction, member : discord.Member, reason : str):
-
+            await interaction.response.defer(ephemeral=True)
             if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_USER_DEACTIVATOR_CFG_PERMISSIONS_DEACTIVATE_USER, interaction.user, member, self.permissions, self.logChannel):
-                await interaction.response.send_message("Die Nutzung dieses Befehls ist für Sie untersagt! Dieser Vorfall wird gemeldet 🚔!", ephemeral=True)
+                await interaction.followup.send("Die Nutzung dieses Befehls ist für Sie untersagt! Dieser Vorfall wird gemeldet 🚔!",ephemeral=True)
                 return
             
             #update the config entry
@@ -131,7 +164,7 @@ class FlugUserDeactivator(modules.FlugModule.FlugModule):
                                             color=discord.Colour.green())
             embed.description = f"{interaction.user.mention} deactivated {member.mention} for the following reason:\n{reason}"
             await self.logChannel.send(embed=embed)
-            await interaction.response.send_message(f"See {self.logChannel.mention}", ephemeral=True)
+            await interaction.followup.send(f"Succes: {self.logChannel.mention}")
                     
             return
 
