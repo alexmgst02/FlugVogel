@@ -44,6 +44,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
     treshold: int = None
     ghostPingLogSize: int = None
     permissions: FlugPermissions.FlugPermissions = None
+    cfg: FlugConfig.FlugConfig = None
 
     #
     # GhostPingLog which stores ghost pings so that users can check for it later; format:
@@ -80,7 +81,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             # check whether the channel is in the ignore list
             if util.isInList.isInList(
                 self.channels.getChannelName(str(message.channel.id)),
-                self.config.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS)):
+                self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS)):
                 return
 
         # get the relevant config values
