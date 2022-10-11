@@ -23,45 +23,47 @@ class VoteButton(discord.ui.Button):
 
         self.label = self.labelText + f" ({self.count})"
 
+    def decrementCount(self):
+        key = self.view.translateToOpt.get(int(self.custom_id))
+        currentVotes = self.view.voteResults.get(key, 1)
+        self.count -= 1
+        self.view.voteResults.update({key:currentVotes-1})
+        self.refreshLabel()        
+
+    def incrementCount(self):
+        key = self.view.translateToOpt.get(int(self.custom_id))
+        currentVotes = self.view.voteResults.get(key, 0)
+        self.count += 1
+        self.view.voteResults.update({key:currentVotes+1})
+        self.refreshLabel()        
+
+
 
     async def callback(self, interaction: discord.Interaction):
         self.view : VoteView
         userStatus = self.view.votes.get(str(interaction.user.id))
 
-        key = self.view.translateToOpt.get(int(self.custom_id))
-        currentVotes = self.view.voteResults.get(key, 0)
 
         #has not voted before
         if userStatus == None:
             self.view.votes.update({str(interaction.user.id):self.mode})
-            self.view.voteResults.update({key:currentVotes+1})
-            self.count += 1
-            self.refreshLabel()
-
+            self.incrementCount()
+            
         #wants to change vote
         elif userStatus != self.mode:
             self.view.votes.update({str(interaction.user.id):self.mode})
-            keyDel = self.view.translateToOpt.get(int(userStatus))
-            voteDel = self.view.voteResults.get(keyDel, 1)              
-            self.view.voteResults.update({key:currentVotes+1})
-            self.view.voteResults.update({keyDel:voteDel-1})
+            self.incrementCount()
             #remove prior vote
             for btn in self.view.children:
                 if btn.custom_id == str(userStatus):
-                    btn.count -= 1
-                    btn.refreshLabel()
+                    btn.decrementCount()
                     break
             
-            self.count += 1
-            self.refreshLabel()
         
         #wants to remove vote
         else:
-            self.view.voteResults.update({key:currentVotes-1})
-
             self.view.votes.update({str(interaction.user.id):None})
-            self.count -= 1
-            self.refreshLabel()
+            self.decrementCount()
 
         await interaction.response.edit_message(view=self.view)
 
@@ -87,37 +89,23 @@ class VoteView(discord.ui.View):
             tmpButton = VoteButton(options[i], DEFAULT_FLUGVOGEL_VOTER_HELPER_MODES[i])
             self.add_item(tmpButton)
             self.translateToOpt.update({DEFAULT_FLUGVOGEL_VOTER_HELPER_MODES[i]:options[i]})
+            self.voteResults.update({options[i]:0})
 
     async def on_timeout(self):
         
 
-        print(self.voteResults)
-            
-
-
+        
+        self.voteResults = dict(sorted(self.voteResults.items(), key=lambda item: item[1]))    
+        
         embed = discord.Embed(color=discord.Color.brand_green())
         embed.set_author(name=self.voteInteraction.user.name, icon_url=self.voteInteraction.user.display_avatar)
         embed.title = f"Abstimmung von {self.voteInteraction.user.name}"
 
-        result = f"Die Abstimmung ist vollendet! "
+        result = f"Die Abstimmung ist vollendet! Es haben\n"
+        for key,value in self.voteResults.items():
+            result += f"{value} Nutzer für {key}\n"
 
-        if agree == 1:
-            result += f"1 Nutzer stimmte für Ja, "
-        else:
-            result += f"{agree} Nutzer stimmten für Ja, "
-
-        if disagree == 1:
-            result += "1 Nutzer stimmte für Nein\n"
-        else:
-            result += f"{disagree} Nutzer stimmten für Nein\n"
-
-        if agree > disagree:
-            result += "Somit hat die Mehrheit für Ja gestimmt✅"
-        elif disagree > agree:
-            result += "Somit ist das Ergebnis Nein❌"
-        else:
-            result += "Gleichstand! ❎"
-
+        result += "abgestimmt."
         embed.description = result
 
         response = await self.voteInteraction.original_response()

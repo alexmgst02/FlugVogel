@@ -1,7 +1,6 @@
 import asyncio
-from email import message
 import logging
-
+import typing
 
 import discord
 
@@ -106,9 +105,10 @@ class FlugVoter(modules.FlugModule.FlugModule):
             waitTime="Die Abstimmungszeit in Minuten",
             content="Ihr Anliegen, welches abgestimmt werden soll",
             option1="Die erste Option",
-            option2="Die zweite Option"
+            option2="Die zweite Option", 
+            option3="Weitere Option falls benötigt"
         )
-        async def abstimmung(interaction: discord.Interaction, waitTime : int, content : str, option1 : str, option2 : str):
+        async def abstimmung(interaction: discord.Interaction, waitTime : int, content : str, option1 : str, option2 : str, option3 : typing.Optional[str]):
             if waitTime > self.maxWaitTime:
                 if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_LONG_VOTE, interaction.user, None,
                 self.permissions, self.logChannel):
@@ -133,7 +133,8 @@ class FlugVoter(modules.FlugModule.FlugModule):
             options = []
             options.append(option1)
             options.append(option2)
-
+            if option3:
+                options.append(option3)
 
             voteManager = util.flugVoterHelper.VoteManager(waitTime, interaction, content, options)
 
