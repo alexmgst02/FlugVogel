@@ -1,7 +1,8 @@
 from typing import List
 import discord
 import datetime
-
+import asyncio
+import logging
 
 DEFAULT_FLUGVOGEL_VOTER_HELPER_MODES = [0,1,2,3,4,5]
 
@@ -59,7 +60,6 @@ class VoteButton(discord.ui.Button):
                     btn.decrementCount()
                     break
             
-        
         #wants to remove vote
         else:
             self.view.votes.update({str(interaction.user.id):None})
@@ -76,8 +76,8 @@ class VoteView(discord.ui.View):
     voteResults : dict = None
     translateToOpt : dict = None
 
-    def __init__(self, timeout : int, interaction : discord.Interaction, options : List[str]):
-        super().__init__(timeout=timeout)
+    def __init__(self, interaction : discord.Interaction, options : List[str]):
+        super().__init__(timeout=None)
 
         self.voteInteraction = interaction
 
@@ -91,10 +91,7 @@ class VoteView(discord.ui.View):
             self.translateToOpt.update({DEFAULT_FLUGVOGEL_VOTER_HELPER_MODES[i]:options[i]})
             self.voteResults.update({options[i]:0})
 
-    async def on_timeout(self):
-        
-
-        
+    async def endVote(self):
         self.voteResults = dict(sorted(self.voteResults.items(), key=lambda item: item[1]))    
         
         embed = discord.Embed(color=discord.Color.brand_green())
@@ -103,10 +100,13 @@ class VoteView(discord.ui.View):
 
         result = f"Die Abstimmung ist vollendet! Es haben\n"
         for key,value in self.voteResults.items():
-            result += f"{value} Nutzer für {key}\n"
+            result += f"{value} Nutzer für '{key}'\n"
 
         result += "abgestimmt."
         embed.description = result
+
+        
+        self.stop()
 
         response = await self.voteInteraction.original_response()
         await self.voteInteraction.channel.send(embed=embed, reference=response.to_reference())        
@@ -119,6 +119,7 @@ class VoteManager():
     waitTime : int = None
     embedContent : str = None
     voteOptions : List[str] = None
+    
     def __init__(self, waitTime : int, interaction : discord.Interaction, content : str, options : List[str]):
 
         self.embed = discord.Embed(color=discord.Color.dark_grey())
@@ -127,7 +128,7 @@ class VoteManager():
         self.embedContent = content
         self.voteOptions = options
 
-    def buildEmbed(self) -> bool:
+    async def startVote(self):
         self.embed.set_author(name=self.voteInteraction.user.name)
         self.embed.title = f"Abstimmung von {self.voteInteraction.user.name}"
 
@@ -138,14 +139,15 @@ class VoteManager():
         
 
         if len(self.embed.description) > 2000:
-            return False
+            logging.critical(f"{self.moduleName} could not build embed.")
+            return 
 
-        return True
-
-    async def startVote(self):
-        self.view = VoteView(self.waitTime*60, self.voteInteraction, self.voteOptions)
-
-        await self.voteInteraction.response.send_message(embed=self.embed, view=self.view)   
-
+        self.view = VoteView(self.voteInteraction, self.voteOptions)
+        await self.voteInteraction.response.send_message(embed=self.embed, view=self.view)
+        await asyncio.sleep(60*self.waitTime)   
+        self.embed.color = discord.Color.blurple()
+        self.view.clear_items()
+        await self.voteInteraction.edit_original_response(embed=self.embed, view=self.view)
+        await self.view.endVote()
 
         

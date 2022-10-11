@@ -106,9 +106,11 @@ class FlugVoter(modules.FlugModule.FlugModule):
             content="Ihr Anliegen, welches abgestimmt werden soll",
             option1="Die erste Option",
             option2="Die zweite Option", 
-            option3="Weitere Option falls benötigt"
+            option3="Weitere Option falls benötigt",
+            option4="Weitere Option falls benötigt",
+            option5="Weitere Option falls benötigt"
         )
-        async def abstimmung(interaction: discord.Interaction, waitTime : int, content : str, option1 : str, option2 : str, option3 : typing.Optional[str]):
+        async def abstimmung(interaction: discord.Interaction, waitTime : int, content : str, option1 : str, option2 : str, option3 : typing.Optional[str], option4: typing.Optional[str], option5: typing.Optional[str]):
             if waitTime > self.maxWaitTime:
                 if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_LONG_VOTE, interaction.user, None,
                 self.permissions, self.logChannel):
@@ -135,16 +137,15 @@ class FlugVoter(modules.FlugModule.FlugModule):
             options.append(option2)
             if option3:
                 options.append(option3)
-
-            voteManager = util.flugVoterHelper.VoteManager(waitTime, interaction, content, options)
-
-            if not voteManager.buildEmbed():
-                logging.critical(f"{self.moduleName} could not build embed.")
-                return
-
-            await voteManager.startVote()
+            if option4:
+                options.append(option4)
+            if option5:
+                options.append(option5)
 
             self.voteCount.update({str(interaction.user.id):voteAmount+1})
+            voteManager = util.flugVoterHelper.VoteManager(waitTime, interaction, content, options)
+            await voteManager.startVote()
+            self.voteCount.update({str(interaction.user.id):voteAmount})
             
 
         return True
