@@ -267,7 +267,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             if len(pings) == 1:
                 embed.description = "Es liegt ein Geisterping gegen sie vor! Folgend die verantwortliche Person:\n"
             else:
-                embed.description = f"Es liegen {len(pings)} Geisterpings gegen {target.mention}!"
+                embed.description = f"Es liegen {len(pings)} Geisterpings gegen {target.mention} vor!"
 
                 if len(pings) != 0:
                     embed.description += " Folgend die verantwortlichen Personen:\n"
