@@ -24,6 +24,8 @@ DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS = "permissions"
 DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_LONG_VOTE = "long_vote"
 DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_MORE_VOTES  = "bypass_vote_count"
 
+DEFAULT_DISCORD_MAX_LABEL_LENGTH = 80
+
 class FlugVoter(modules.FlugModule.FlugModule):
     cfg: FlugConfig.FlugConfig = None
     logChannelId : int = None
@@ -112,6 +114,10 @@ class FlugVoter(modules.FlugModule.FlugModule):
             option5="Weitere Option falls benötigt"
         )
         async def abstimmung(interaction: discord.Interaction, waitTime : int, content : str, option1 : str, option2 : str, option3 : typing.Optional[str], option4: typing.Optional[str], option5: typing.Optional[str]):
+            
+            logEmbed = discord.Embed()
+            logEmbed.title = f"{self.moduleName}"
+          
             if waitTime > self.maxWaitTime:
                 if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_LONG_VOTE, interaction.user, None,
                 self.permissions, self.logChannel):
@@ -130,7 +136,10 @@ class FlugVoter(modules.FlugModule.FlugModule):
         
             if waitTime < 0:
                 await interaction.response.send_message("Bitte geben Sie eine positive Zahl als Abstimmungszeit ein.", ephemeral=True)
-                
+                logEmbed.color = discord.Color.dark_red()
+                logEmbed.description = f"{self.moduleName} could not start Vote because invalid waitTime {waitTime} was passed by {interaction.user.mention}."
+                await self.logChannel.send(embed = logEmbed)                
+  
                 return
 
             options = []
@@ -142,6 +151,17 @@ class FlugVoter(modules.FlugModule.FlugModule):
                 options.append(option4)
             if option5:
                 options.append(option5)
+
+            #check if lengths are valid
+            for opt in options:
+                if len(opt) > DEFAULT_DISCORD_MAX_LABEL_LENGTH:
+                    logEmbed.color = discord.Color.dark_red()
+                    logEmbed.description = f"{self.moduleName} could not start Vote because invalid option with length {len(opt)} was passed by {interaction.user.mention}."
+                    await self.logChannel.send(embed = logEmbed)
+                    logging.info(f"{self.moduleName} could not start Vote because invalid option with length {len(opt)} was passed.")
+                    await interaction.response.send_message(f"Bitte geben Sie weniger als {DEFAULT_DISCORD_MAX_LABEL_LENGTH} Zeichen bei den Optionen ein.", ephemeral=True)
+                    return
+        
 
             #increment users vote count
             self.voteCount.update({str(interaction.user.id):voteAmount+1})
@@ -167,12 +187,16 @@ class FlugVoter(modules.FlugModule.FlugModule):
 
             await interaction.response.send_message(embed=embed, view=view)
 
+            logEmbed.color = discord.Color.green()
+            logEmbed.description = f"{interaction.user.mention} started a vote in {interaction.channel.mention}."
+            await self.logChannel.send(embed=logEmbed)
+
+
             #wait
             await asyncio.sleep(60*waitTime)   
 
             #end vote
             embed.color = discord.Color.blurple()
-            view.clear_items()
             await interaction.edit_original_response(embed=embed, view=view)
             await view.endVote()
 

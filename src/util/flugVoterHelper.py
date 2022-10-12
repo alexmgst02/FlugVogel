@@ -3,7 +3,7 @@ import discord
 
 
 DEFAULT_FLUGVOGEL_VOTER_HELPER_MODES = [0,1,2,3,4,5]
-
+DEFAULT_DISCORD_MAX_LABEL_LENGTH = 80
 
 #This button receives a label and custom_id on init. If pressed it increments a voting
 #counter. The View should be of type VoteView.
@@ -21,6 +21,8 @@ class VoteButton(discord.ui.Button):
     def refreshLabel(self):
         if self.count == 0:
             self.label = self.labelText
+            return
+        if len(self.labelText + f" ({self.count})") > DEFAULT_DISCORD_MAX_LABEL_LENGTH:
             return
 
         self.label = self.labelText + f" ({self.count})"
