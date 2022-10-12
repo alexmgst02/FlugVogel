@@ -2,18 +2,26 @@ import logging
 
 import discord
 
+import util.flugPermissionsHelper
 import modules.FlugModule
 import FlugClient
 import FlugChannels
 import FlugRoles
 import FlugUsers
 import FlugConfig
+import FlugPermissions
 
+DEFAULT_FLUGVOGEL_MESSAGE_REPORTER_CFG_PERMISSIONS = "permissions"
+
+DEFAULT_FLUGVOGEL_MESSAGE_REPORTER_CFG_PERMISSIONS_REPORT_MESSAGE = "report_message"
 
 class FlugMessageReporter(modules.FlugModule.FlugModule):
     cfg: FlugConfig.FlugConfig = None
     reportChannelId: int = None
     reportChannel: discord.abc.GuildChannel = None
+    logChannelId : int = None
+    logChannel : discord.abc.GuildChannel = None
+    permissions : FlugPermissions.FlugPermissions = None
 
     def __init__(self, moduleName: str, configFilePath: str,
             client: FlugClient.FlugClient = None,
@@ -31,6 +39,11 @@ class FlugMessageReporter(modules.FlugModule.FlugModule):
 
         if self.reportChannel == None:
             logging.critical(f"'{self.moduleName}' could not find the report channel ({self.reportChannelId})!")
+
+        self.logChannel = self.client.get_channel(self.logChannelId)
+
+        if self.logChannel == None:
+            logging.critical(f"'{self.moduleName}' could not find the log channel ({self.logChannelId})!")
 
     def setup(self):
         # load the module config
@@ -51,12 +64,37 @@ class FlugMessageReporter(modules.FlugModule.FlugModule):
 
             return False
 
+        self.logChannelId = self.channels.getLogChannelId()
+
+        if self.logChannelId == None:
+            logging.critical(f"No ID found for the log-Channel '{self.moduleName}'!")
+
+            return False
+
+        # initialize the permission config
+        try:
+            self.permissions = FlugPermissions.FlugPermissions(
+                self.cfg.c().get(DEFAULT_FLUGVOGEL_MESSAGE_REPORTER_CFG_PERMISSIONS),
+                self.roles, self.users
+            )
+        except Exception as e:
+            logging.critical(f"Failed to setup permission config for {self.moduleName}!")
+            logging.exception(e)
+
+            return False
+
         # register self.get_report_channel_on_ready for on_ready
         self.client.addSubscriber("on_ready", self.get_report_channel_on_ready)
 
         # register the context menu to report a message
         @self.client.tree.context_menu(name="Nachricht melden")
         async def report_message(interaction: discord.Interaction, message: discord.Message):
+            if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_MESSAGE_REPORTER_CFG_PERMISSIONS_REPORT_MESSAGE, interaction.user, 
+                message.author, self.permissions, self.logChannel):
+                await interaction.response.send_message(f"Sie dürfen keine Nachrichten von {message.author.mention} melden! Dieser Vorfall wird gemeldet 🚔!", ephemeral=True)
+                return
+
+
             # We're sending this response message with ephemeral=True, so only the command executor can see it
             await interaction.response.send_message(
                 f"Danke für das Melden der Nachricht von {message.author.mention}, die Moderatoren werden zeitnah reagieren.", ephemeral=True
