@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import typing
+import datetime
 
 import discord
 
@@ -142,9 +143,40 @@ class FlugVoter(modules.FlugModule.FlugModule):
             if option5:
                 options.append(option5)
 
+            #increment users vote count
             self.voteCount.update({str(interaction.user.id):voteAmount+1})
-            voteManager = util.flugVoterHelper.VoteManager(waitTime, interaction, content, options)
-            await voteManager.startVote()
+
+            #embed for interaction response
+            embed = discord.Embed(color=discord.Color.dark_grey())
+            embed.set_author(name=interaction.user.name)
+            embed.title = f"Abstimmung von {interaction.user.name}"
+
+            #write end of vote on embed
+            now = datetime.datetime.now()
+            end = now + datetime.timedelta(minutes=waitTime)
+            endString = end.strftime("%d/%m/%Y %H:%M:%S")
+            embed.description = f"{interaction.user.mention} hat eine Abstimmung gestartet:\n **{content}**\n Die Abstimmung endet: {endString}"
+        
+
+            if len(embed.description) > 2000:
+                logging.critical(f"{self.moduleName} could not build embed.")
+                return 
+
+            #view for the response - One button for each option
+            view = util.flugVoterHelper.VoteView(interaction, options)
+
+            await interaction.response.send_message(embed=embed, view=view)
+
+            #wait
+            await asyncio.sleep(60*waitTime)   
+
+            #end vote
+            embed.color = discord.Color.blurple()
+            view.clear_items()
+            await interaction.edit_original_response(embed=embed, view=view)
+            await view.endVote()
+
+            #user vote count is back to prior value
             self.voteCount.update({str(interaction.user.id):voteAmount})
             
 
