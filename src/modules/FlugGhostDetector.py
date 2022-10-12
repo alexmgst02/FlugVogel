@@ -286,7 +286,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
 
             await interaction.response.send_message(embed=embed, ephemeral=True)
 
-        @self.client.tree.command(description="Entleere Ihr persönliches Geisterpingpostfach.")
+        @self.client.tree.command(description="Entleert Ihr persönliches Geisterpingpostfach.")
         async def entleere_geister_pings(interaction: discord.Interaction):
             await interaction.response.defer(ephemeral=True, thinking=False)
 
