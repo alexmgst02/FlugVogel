@@ -1,5 +1,4 @@
 import logging
-import random
 
 import discord
 
@@ -27,7 +26,7 @@ class FlugAltklausuren(modules.FlugModule.FlugModule):
         # greet-message
         logging.info("I am '%s'! I got initialized with the config file '%s'!" % (self.moduleName, self.configFilePath))
 
-    async def get_log_channel_on_ready1(self):
+    async def get_log_channel_on_ready(self):
         self.logChannel = self.client.get_channel(self.logChannelId)
 
         if self.logChannel == None:
@@ -53,7 +52,7 @@ class FlugAltklausuren(modules.FlugModule.FlugModule):
             return False
 
         # register the event handler to get the log channel
-        self.client.addSubscriber('on_ready', self.get_log_channel_on_ready1)
+        self.client.addSubscriber('on_ready', self.get_log_channel_on_ready)
 
         # setup the command
         @self.client.tree.command(description="Zeigt einen Verweis zu den Freitagsrunde-Altklausuren (...) zum Modul des aktuellen Kanals.")
@@ -91,7 +90,7 @@ class FlugAltklausuren(modules.FlugModule.FlugModule):
 
                     await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "👍 Successful Altklausuren Request 👍",
                         f"'{interaction.user.name}' ({interaction.user.mention}) requested" +
-                        f"Altklausuren in the channel '{interaction.channel.name}' ({interaction.channel.mention})"
+                        f" Altklausuren in the channel '{interaction.channel.name}' ({interaction.channel.mention})"
                     )
 
                     return
