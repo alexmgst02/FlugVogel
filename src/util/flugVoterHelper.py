@@ -1,8 +1,7 @@
 from typing import List
+
 import discord
 
-
-DEFAULT_FLUGVOGEL_VOTER_HELPER_MODES = [0,1,2,3,4,5]
 DEFAULT_DISCORD_MAX_LABEL_LENGTH = 80
 
 #This button receives a label and custom_id on init. If pressed it increments a voting
@@ -90,9 +89,9 @@ class VoteView(discord.ui.View):
         self.translateToOpt = {}
 
         for i in range(len(options)):
-            tmpButton = VoteButton(options[i], DEFAULT_FLUGVOGEL_VOTER_HELPER_MODES[i])
+            tmpButton = VoteButton(options[i], i)
             self.add_item(tmpButton)
-            self.translateToOpt.update({DEFAULT_FLUGVOGEL_VOTER_HELPER_MODES[i]:options[i]})
+            self.translateToOpt.update({i:options[i]})
             self.voteResults.update({options[i]:0})
 
     async def endVote(self):
