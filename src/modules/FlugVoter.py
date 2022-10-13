@@ -193,8 +193,9 @@ class FlugVoter(modules.FlugModule.FlugModule):
 
             #end vote
             embed.color = discord.Color.blurple()
-            await interaction.edit_original_response(embed=embed, view=view)
             await view.endVote()
+            await interaction.edit_original_response(embed=embed, view=view)
+            
 
 
             #user vote count is back to prior value

@@ -110,7 +110,6 @@ class VoteView(discord.ui.View):
         embed.description = result
         
         self.clear_items()
-
         self.stop()
 
         response = await self.voteInteraction.original_response()
