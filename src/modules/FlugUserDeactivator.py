@@ -11,6 +11,7 @@ import FlugConfig
 import FlugPermissions
 
 import util.flugPermissionsHelper
+import util.logHelper
 
 DEFAULT_FLUGVOGEL_USER_DEACTIVATOR_CFG_PERMISSIONS = "permissions"
 
@@ -122,10 +123,8 @@ class FlugUserDeactivator(modules.FlugModule.FlugModule):
             self.users.userConfig.c().update({str(member.id):entry})
             self.users.save()
 
-            embed = discord.Embed(title="👼User has been reactivated👼",
-                                            color=discord.Colour.green())
-            embed.description = f"{interaction.user.mention} reactivated {member.mention}."
-            await self.logChannel.send(embed=embed)
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "👼User has been reactivated👼", f"{interaction.user.mention} reactivated {member.mention}.")
+
             await interaction.followup.send(f"Success: {self.logChannel.mention}.")
             
 
@@ -158,11 +157,9 @@ class FlugUserDeactivator(modules.FlugModule.FlugModule):
             #assign ban role
             await member.add_roles(discord.utils.get(interaction.guild.roles, id=self.deactivationRoleId))
 
-                    
-            embed = discord.Embed(title="⚰️User has been deactivated⚰️",
-                                            color=discord.Colour.green())
-            embed.description = f"{interaction.user.mention} deactivated {member.mention} for the following reason:\n{reason}"
-            await self.logChannel.send(embed=embed)
+
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "⚰️User has been deactivated⚰️", f"{interaction.user.mention} deactivated {member.mention} for the following reason:\n{reason}")
+
             await interaction.followup.send(f"Succes: {self.logChannel.mention}")
                     
             return
