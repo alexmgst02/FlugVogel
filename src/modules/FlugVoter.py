@@ -104,7 +104,7 @@ class FlugVoter(modules.FlugModule.FlugModule):
 
         @discord.app_commands.rename(waitTime = "abstimmungszeit")
         @discord.app_commands.rename(content="inhalt")        
-        @self.client.tree.command(description="Configure the FlugGhostDetector")
+        @self.client.tree.command(description="Starten Sie eine Abstimmung.")
         @discord.app_commands.describe(
             waitTime="Die Abstimmungszeit in Minuten",
             content="Ihr Anliegen, welches abgestimmt werden soll",
@@ -117,7 +117,7 @@ class FlugVoter(modules.FlugModule.FlugModule):
         async def abstimmung(interaction: discord.Interaction, waitTime : int, content : str, option1 : str, option2 : str, option3 : typing.Optional[str], option4: typing.Optional[str], option5: typing.Optional[str]):
             
           
-            if waitTime > self.maxWaitTime:
+            if waitTime >= self.maxWaitTime:
                 if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_LONG_VOTE, interaction.user, None,
                 self.permissions, self.logChannel):
                     await interaction.response.send_message(f"Bitte wählen Sie eine Abstimmungszeit, die kleiner als {self.maxWaitTime} Minuten ist.", ephemeral=True)
