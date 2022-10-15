@@ -30,6 +30,7 @@ class FlugStatus(modules.FlugModule.FlugModule):
     async def set_status_on_ready(self):
         activity = discord.Game(name=self.status)
         await self.client.change_presence(activity=activity)
+        logging.info(f"Set status to '{activity.name}'")
 
     def setup(self):
         # load the config
