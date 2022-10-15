@@ -124,7 +124,7 @@ class FlugVogel:
         )
 
         if not self.modules.loadCfg():
-            logging.critical("Failed to load FlugVogel-Roles!")
+            logging.critical("Failed to load FlugVogel-Modules!")
 
             return
 
