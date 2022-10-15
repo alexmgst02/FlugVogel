@@ -132,6 +132,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
         elif not self.onlyPings:
             embed.description = f"Ghost-Message"
         else:
+
             return
 
         embed.description += f"\nAuthor: {message.author.mention}\nDeleted after {difference} seconds\nOriginal Message: "
