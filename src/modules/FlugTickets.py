@@ -78,8 +78,6 @@ class CancelTicketButton(discord.ui.Button):
 
             await interaction.followup.send(f"closed ticket for {interaction.user.mention}")
             
-            self.closedForUser = True
-
         else:
             await interaction.followup.send("closed ticket, deleting channel.")
             await asyncio.sleep(3)
