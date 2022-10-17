@@ -15,6 +15,8 @@ import util.logHelper
 
 DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_CATEGORYID = "ticketCategoryId"
 DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_OLD_TICKET_MESSAGEID = "ticketMessageId"
+DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_MAX_CLOSED_ACTIVE_TICKETS = "maxClosedTickets"
+
 
 
 class CancelButton(discord.ui.Button):
@@ -49,7 +51,34 @@ class CancelTicketButton(discord.ui.Button):
 
         if interaction.user.id == self.ticketCreator.id:
             await self.ticketChannel.set_permissions(self.ticketCreator, read_messages=False, send_messages=False)
+
+            #rename channel
+            #get count
+            max = 1
+            for channel in self.ticketChannel.category.text_channels:
+                channelName = channel.name
+                channelParts = channelName.split("-")
+                if len(channelParts) < 4:
+                    continue
+
+                userId = channelParts[1]
+
+                if userId != str(interaction.user.id):
+                    continue
+
+                ticketCount = int(channelParts[3])
+                if ticketCount > max:
+                    max = ticketCount
+                elif ticketCount == max:
+                    max += 1
+            
+            newName =  f"ticket-{interaction.user.id}-closed-{max}"
+            await self.ticketChannel.edit(name=newName)
+
+
             await interaction.followup.send(f"closed ticket for {interaction.user.mention}")
+            
+            self.closedForUser = True
 
         else:
             await interaction.followup.send("closed ticket, deleting channel.")
@@ -83,13 +112,14 @@ class TicketButton(discord.ui.Button):
 class CreateTicketButton(discord.ui.Button):
     guild : discord.Guild = None
     logChannel : discord.TextChannel = None
-
+    maxClosed : int = None
     ticketCategory : discord.CategoryChannel = None
-    def __init__(self, guild : discord.Guild, ticketCategory : discord.CategoryChannel, logChannel : discord.TextChannel):
+    def __init__(self, guild : discord.Guild, ticketCategory : discord.CategoryChannel, logChannel : discord.TextChannel, maxClosed : int):
         super().__init__(label="📩 Ticket erstellen", style=discord.ButtonStyle.gray)
         self.ticketCategory = ticketCategory
         self.guild = guild
         self.logChannel = logChannel
+        self.maxClosed = maxClosed
 
     async def callback(self, interaction: discord.Interaction):
         ticketChannelName = f"ticket-{interaction.user.id}" #must be unique
@@ -103,6 +133,26 @@ class CreateTicketButton(discord.ui.Button):
 
             return
 
+        #check if user has more closed (but still existing) tickets than allowed
+        ticketCount = 0
+        for channel in self.ticketCategory.text_channels:
+            channelName = channel.name
+            channelParts = channelName.split("-")
+            if len(channelParts) < 4:
+                continue
+            userId = channelParts[1]
+
+            if userId != str(interaction.user.id):
+                continue
+
+            ticketCount += 1
+
+            if ticketCount >= self.maxClosed:
+                await interaction.followup.send(f"Es existieren noch mindestens {ticketCount} geschlossene Tickets, welche noch verarbeitet werden.", ephemeral=True)
+                await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "📩FlugTickets📩", f"{interaction.user.mention} tried to open second ticket.")
+
+                return                
+            
         
         #create channel first - it syncs perms with the catgory
         newChannel = await self.ticketCategory.create_text_channel(ticketChannelName)
@@ -137,6 +187,8 @@ class FlugTickets(modules.FlugModule.FlugModule):
     ticketCategoryId : int = None
     ticketCategory : discord.CategoryChannel = None
     guild : discord.Guild = None
+    maxClosedTickets : int = None
+
 
     def __init__(self, moduleName: str, configFilePath: str,
             client: FlugClient.FlugClient = None,
@@ -161,7 +213,7 @@ class FlugTickets(modules.FlugModule.FlugModule):
             ticketChannelEmbed.description = f"Erstellen Sie hier ein Ticket, indem Sie den 📩-Button drücken."
 
             view = discord.ui.View()
-            view.add_item(CreateTicketButton(self.guild, self.ticketCategory, self.logChannel))
+            view.add_item(CreateTicketButton(self.guild, self.ticketCategory, self.logChannel, self.maxClosedTickets))
 
             oldMessageId : discord.Message = self.cfg.c().get(DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_OLD_TICKET_MESSAGEID)
 
@@ -224,10 +276,18 @@ class FlugTickets(modules.FlugModule.FlugModule):
             return False
 
         #load ticketCategoryId
-        self.ticketCategoryId = self.cfg.c().get(DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_CATEGORYID)
+        self.ticketCategoryId = self.categories.getTicketCategoryId()
 
         if self.ticketCategoryId == None:
             logging.critical(f"{self.moduleName} could not load ticketCategoryId")
+
+            return False
+
+        #load max closed-active ticket count
+        self.maxClosedTickets= self.cfg.c().get(DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_MAX_CLOSED_ACTIVE_TICKETS)
+
+        if self.maxClosedTickets == None:
+            logging.critical(f"{self.moduleName} could not load Max closed-active tickets")
 
             return False
 

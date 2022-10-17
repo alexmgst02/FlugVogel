@@ -49,7 +49,7 @@ class FlugCategories:
 
     def getTicketCategoryId(self):
         #get the config for the report channel
-        categoryId = self.getChannelConfig(DEFAULT_FLUGVOGEL_CFG_KEY_CATEGORIES_TICKETS)
+        categoryId = self.getCategoryConfig(DEFAULT_FLUGVOGEL_CFG_KEY_CATEGORIES_TICKETS)
 
         if categoryId == None:
             return None
