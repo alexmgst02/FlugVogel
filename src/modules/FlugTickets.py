@@ -38,13 +38,15 @@ class CancelTicketButton(discord.ui.Button):
     logChannel : discord.TextChannel = None    
     ticketChannel : discord.CategoryChannel = None
     ticketCreator : discord.Member = None
+    originalInteraction : discord.Interaction = None
 
-    def __init__(self, guild : discord.Guild, ticketChannel : discord.TextChannel, logChannel : discord.TextChannel, ticketCreator : discord.Member):
+    def __init__(self, guild : discord.Guild, ticketChannel : discord.TextChannel, logChannel : discord.TextChannel, ticketCreator : discord.Member, originalInteraction : discord.Interaction):
         super().__init__(label="🔒Bestätigen🔒", style=discord.ButtonStyle.red)
         self.ticketChannel = ticketChannel
         self.guild = guild
         self.logChannel = logChannel
         self.ticketCreator = ticketCreator
+        self.originalInteraction = originalInteraction
 
     async def callback(self, interaction : discord.Interaction):
         await interaction.response.defer()
@@ -77,6 +79,7 @@ class CancelTicketButton(discord.ui.Button):
 
 
             await interaction.followup.send(f"closed ticket for {interaction.user.mention}")
+            await self.originalInteraction.delete_original_response()
             
         else:
             await interaction.followup.send("closed ticket, deleting channel.")
@@ -100,7 +103,7 @@ class TicketButton(discord.ui.Button):
 
     async def callback(self, interaction : discord.Interaction):
         view = discord.ui.View()
-        closeBtn = CancelTicketButton(self.guild, self.ticketChannel, self.logChannel, self.ticketCreator)
+        closeBtn = CancelTicketButton(self.guild, self.ticketChannel, self.logChannel, self.ticketCreator, interaction)
         cancelButton = CancelButton(self.guild, interaction)
         view.add_item(closeBtn)
         view.add_item(cancelButton)
