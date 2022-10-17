@@ -6,6 +6,7 @@ import discord
 import modules.FlugModule
 import FlugClient
 import FlugChannels
+import FlugCategories
 import FlugRoles
 import FlugUsers
 import FlugConfig
@@ -141,9 +142,10 @@ class FlugTickets(modules.FlugModule.FlugModule):
             client: FlugClient.FlugClient = None,
             channels: FlugChannels.FlugChannels = None,
             roles: FlugRoles.FlugRoles = None, 
-            users: FlugUsers.FlugUsers = None):
+            users: FlugUsers.FlugUsers = None,
+            categories: FlugCategories.FlugCategories = None):
         # setup the super class
-        super().__init__(moduleName, configFilePath, client, channels, roles, users)
+        super().__init__(moduleName, configFilePath, client, channels, roles, users, categories)
 
 
         # greet-message
