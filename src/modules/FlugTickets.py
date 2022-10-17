@@ -61,9 +61,9 @@ class CancelTicketButton(discord.ui.Button):
                 if len(channelParts) < 4:
                     continue
 
-                userId = channelParts[1]
+                userId = int(channelParts[1])
 
-                if userId != str(interaction.user.id):
+                if userId != interaction.user.id:
                     continue
 
                 ticketCount = int(channelParts[3])
@@ -138,16 +138,17 @@ class CreateTicketButton(discord.ui.Button):
             channelParts = channelName.split("-")
             if len(channelParts) < 4:
                 continue
-            userId = channelParts[1]
 
-            if userId != str(interaction.user.id):
+            userId = int(channelParts[1])
+
+            if userId != interaction.user.id:
                 continue
 
             ticketCount += 1
 
             if ticketCount >= self.maxClosed:
                 await interaction.followup.send(f"Es existieren noch mindestens {ticketCount} geschlossene Tickets, welche noch verarbeitet werden.", ephemeral=True)
-                await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "📩FlugTickets📩", f"{interaction.user.mention} tried to open second ticket.")
+                await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "📩FlugTickets📩", f"{interaction.user.mention} tried to open {ticketCount+1}. ticket.")
 
                 return                
             
