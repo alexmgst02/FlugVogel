@@ -6,7 +6,7 @@ import FlugConfig
 import logging
 
 DEFAULT_FLUGVOGEL_CFG_KEY_CATEGORIES_TICKETS = "ticketCategory"
-
+DEFAULT_FLUGVOGEL_CFG_KEY_CATEGORIES_NAME = "name"
 class FlugCategories:
     _categoryConfigPath: dict = None             # store the category config path
     categoryConfig: FlugConfig.FlugConfig = None # store the actual category config (FlugConfig instance)
@@ -46,6 +46,14 @@ class FlugCategories:
 
     def getCategoryConfig(self, id: str) -> dict:
         return self.categoryConfig.c().get(id, None)
+
+    def getCategoryName(self, id: str) -> str:
+        cfg = self.getCategoryConfig(id)
+
+        if cfg == None:
+            return None
+        
+        return cfg.get(DEFAULT_FLUGVOGEL_CFG_KEY_CATEGORIES_NAME)
 
     def getTicketCategoryId(self):
         #get the config for the report channel

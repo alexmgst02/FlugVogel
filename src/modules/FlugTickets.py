@@ -102,7 +102,7 @@ class TicketButton(discord.ui.Button):
         self.ticketCreator = ticketCreator
 
     async def callback(self, interaction : discord.Interaction):
-        view = discord.ui.View()
+        view = discord.ui.View(timeout=None)
         closeBtn = CancelTicketButton(self.guild, self.ticketChannel, self.logChannel, self.ticketCreator, interaction)
         cancelButton = CancelButton(self.guild, interaction)
         view.add_item(closeBtn)
@@ -124,13 +124,14 @@ class CreateTicketButton(discord.ui.Button):
         self.maxClosed = maxClosed
 
     async def callback(self, interaction: discord.Interaction):
-        ticketChannelName = f"ticket-{interaction.user.id}" #must be unique
         await interaction.response.defer(ephemeral=True)
+        ticketChannelName = f"ticket-{interaction.user.id}" #must be unique
+        
 
         #check if user already has an open ticket. otherwise create new ticket.
         existingChannel = discord.utils.get(self.guild.text_channels, name=ticketChannelName)
         if existingChannel != None:
-            await interaction.followup.send(f"Es existiert bereits das Ticket {existingChannel.mention}", ephemeral=True)
+            await interaction.followup.send(f"Es existiert bereits das Ticket {existingChannel.mention}. Dieser Vorfall wird gemeldet🚔!", ephemeral=True)
             await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "📩FlugTickets📩", f"{interaction.user.mention} tried to open second ticket.")
 
             return
@@ -151,7 +152,7 @@ class CreateTicketButton(discord.ui.Button):
             ticketCount += 1
 
             if ticketCount >= self.maxClosed:
-                await interaction.followup.send(f"Es existieren noch mindestens {ticketCount} geschlossene Tickets, welche noch verarbeitet werden.", ephemeral=True)
+                await interaction.followup.send(f"Es existieren noch {ticketCount} geschlossene Tickets, welche noch verarbeitet werden. Dieser Vorfall wird gemeldet🚔!", ephemeral=True)
                 await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "📩FlugTickets📩", f"{interaction.user.mention} tried to open {ticketCount+1}. ticket.")
 
                 return                
@@ -169,11 +170,17 @@ class CreateTicketButton(discord.ui.Button):
         await interaction.followup.send(f"Ticket erstellt: {newChannel.mention}", ephemeral=True)
 
         #setup ticket view and embed
-        view = discord.ui.View()
+        view = discord.ui.View(timeout=None)
         ticketButton = TicketButton(self.guild, newChannel, self.logChannel, member)
         view.add_item(ticketButton)
 
-        await newChannel.send("HI", view=view)
+        ticketEmbed = discord.Embed(color=discord.Color.green())
+        ticketEmbed.title = f"Support Ticket"
+        ticketEmbed.description = ("Das Ticket wurde Erfolgreich erstellt. Sie können bereits Ihr Anliegen beschreiben, ein Moderator wird sich Ihnen zeitnah zuwenden.\n" +
+                                   "Sobald die Angelegenheit Ihrerseits geklärt ist können Sie 'Ticket schließen' drücken. Damit wird der Ticket-Kanal für Sie unsichtbar und zeitnah von den Moderatoren gelöscht.")
+
+
+        await newChannel.send(embed=ticketEmbed, view=view)
 
 
         await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "📩FlugTickets📩", f"{interaction.user.mention} opened ticket.")
@@ -208,6 +215,7 @@ class FlugTickets(modules.FlugModule.FlugModule):
 
 
     async def setup_tickets_on_startup(self):
+        #setup the ticket embed and view in the main ticket channel
         if not self.startupDone:            
 
             ticketChannelEmbed = discord.Embed(color=discord.Color.green())
@@ -215,16 +223,17 @@ class FlugTickets(modules.FlugModule.FlugModule):
             ticketChannelEmbed.title = "Moderatoren kontaktieren"
             ticketChannelEmbed.description = f"Erstellen Sie hier ein Ticket, indem Sie den 📩-Button drücken."
 
-            view = discord.ui.View()
+            view = discord.ui.View(timeout=None)
             view.add_item(CreateTicketButton(self.guild, self.ticketCategory, self.logChannel, self.maxClosedTickets))
 
             oldMessageId : discord.Message = self.cfg.c().get(DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_OLD_TICKET_MESSAGEID)
 
-            #edit old message
+            #edit old message if it exists
             if oldMessageId != None:
                 oldMessage = await self.ticketChannel.fetch_message(oldMessageId)
                 await oldMessage.edit(embed=ticketChannelEmbed, view=view)
-            #send new message
+
+            #or send new message
             else:
                 msg : discord.Message  = await self.ticketChannel.send(embed=ticketChannelEmbed, view=view)
                 self.cfg.c().update({DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_OLD_TICKET_MESSAGEID:msg.id})

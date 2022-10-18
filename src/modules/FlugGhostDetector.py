@@ -22,6 +22,7 @@ DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_ONLY_PINGS = "onlyPings"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS = "permissions"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_LOG_SIZE = "ghostPingLogSize"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS = "ignoreChannels"
+DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CATEGORIES = "ignoreCategories"
 
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_ZEIGE_GEISTER_PINGS_OTHER_USER = "zeige_geister_pings_other_user"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_SET_GHOST_DETECTOR_CONFIG = "set_ghost_detector_config"
@@ -84,6 +85,14 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
                 self.channels.getChannelName(str(message.channel.id)),
                 self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS)):
                 return
+        # check whether the category is known (explicit config exists)
+        if self.categories.isCategoryKnown(str(message.channel.category.id)):
+            # check whether the category is in the ignore list
+            if util.isInList.isInList(
+                self.categories.getCategoryName(str(message.channel.category.id)),
+                self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CATEGORIES)):
+                return
+            
 
         # get the relevant config values
         self.threshold = self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_THRESHOLD, DEFAULT_FLUGVOGEL_GHOSTDETECTOR_TRESHOLD)
