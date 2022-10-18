@@ -87,7 +87,7 @@ class CancelTicketButton(discord.ui.Button):
             await self.ticketChannel.delete()
 
 
-
+#Button attached to ticket menu 
 class TicketButton(discord.ui.Button):
     guild : discord.Guild = None
     logChannel : discord.TextChannel = None    
@@ -110,6 +110,7 @@ class TicketButton(discord.ui.Button):
         await interaction.response.send_message(f"Sicher, {interaction.user.mention}?", view=view)
 
 
+#button attached to ticket create menu
 class CreateTicketButton(discord.ui.Button):
     guild : discord.Guild = None
     logChannel : discord.TextChannel = None
