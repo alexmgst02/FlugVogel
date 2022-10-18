@@ -183,6 +183,8 @@ class FlugVoter(modules.FlugModule.FlugModule):
             view = util.flugVoterHelper.VoteView(interaction, options)
 
             await interaction.response.send_message(embed=embed, view=view)
+            originalResponse : discord.Message = await (await interaction.original_response()).fetch() #fetch original response
+            await view.setReference(originalResponse)
 
             await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Vote started",
              f"{interaction.user.mention} started a vote in {interaction.channel.mention}")
@@ -194,9 +196,8 @@ class FlugVoter(modules.FlugModule.FlugModule):
             #end vote
             embed.color = discord.Color.blurple()
             await view.endVote()
-            await interaction.edit_original_response(embed=embed, view=view)
+            await originalResponse.edit(embed=embed, view=view)
             
-
 
             #user vote count is back to prior value
             self.voteCount.update({str(interaction.user.id):voteAmount})

@@ -1,4 +1,5 @@
 from typing import List
+from urllib import response
 
 import discord
 
@@ -76,6 +77,7 @@ class VoteView(discord.ui.View):
     voteInteraction : discord.Interaction = None
     voteResults : dict = None
     translateToOpt : dict = None    #custom_id : label
+    reference = discord.MessageReference = None
 
     #Pass the options which can be voted for as options and the 
     #original Interaction as interaction.
@@ -83,7 +85,6 @@ class VoteView(discord.ui.View):
         super().__init__(timeout=None)
 
         self.voteInteraction = interaction
-
         self.votes = {}
         self.voteResults = {}
         self.translateToOpt = {}
@@ -93,6 +94,9 @@ class VoteView(discord.ui.View):
             self.add_item(tmpButton)
             self.translateToOpt.update({i:options[i]})
             self.voteResults.update({options[i]:0})
+
+    async def setReference(self, originalResponse : discord.Message):
+        self.reference = originalResponse.to_reference()
 
     async def endVote(self):
         self.voteResults = dict(sorted(self.voteResults.items(), key=lambda item: item[1]))    
@@ -111,5 +115,4 @@ class VoteView(discord.ui.View):
         self.clear_items()
         self.stop()
 
-        response = await self.voteInteraction.original_response()
-        await self.voteInteraction.channel.send(embed=embed, reference=response.to_reference())        
+        await self.voteInteraction.channel.send(embed=embed, reference=self.reference)        
