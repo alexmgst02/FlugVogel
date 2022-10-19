@@ -56,7 +56,7 @@ class CancelTicketButton(discord.ui.Button):
         await interaction.response.defer()
 
         #Users with the 'manage_tickets' permission will delete the ticket channel - other users will simply deactivate the ticket and leave the channel open to moderators
-        if not await util.flugPermissionsHelper.canDoWrapper("manage_tickets", interaction.user, None, self.permissions, self.logChannel, False): 
+        if self.permissions.canDo("manage_tickets", interaction.user, None) < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
             await self.ticketChannel.set_permissions(self.ticketCreator, read_messages=False, send_messages=False)
 
             #rename channel
@@ -88,7 +88,7 @@ class CancelTicketButton(discord.ui.Button):
             
         else:
             await interaction.followup.send("closed ticket, deleting channel.")
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
             await self.ticketChannel.delete()
 
 
@@ -231,7 +231,7 @@ class FlugTickets(modules.FlugModule.FlugModule):
             ticketChannelEmbed = discord.Embed(color=discord.Color.green())
             ticketChannelEmbed.set_author(name=self.client.user.name, icon_url=self.client.user.display_avatar.url) 
             ticketChannelEmbed.title = "Moderatoren kontaktieren"
-            ticketChannelEmbed.description = f"Erstellen Sie hier ein Ticket, indem Sie den 📩-Button drücken."
+            ticketChannelEmbed.description = f"Erstellen Sie hier ein Ticket, indem Sie den 📩-Button drücken. Damit können Moderatoren privat kontaktiert werden, um Server Angelegenheiten zu klären."
 
             view = discord.ui.View(timeout=None)
             view.add_item(CreateTicketButton(self.guild, self.ticketCategory, self.logChannel, self.maxClosedTickets, self.permissions))
