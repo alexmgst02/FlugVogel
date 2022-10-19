@@ -9,10 +9,17 @@ import FlugChannels
 import FlugRoles
 import FlugUsers
 import FlugConfig
+import FlugPermissions
+
+import util.flugPermissionsHelper
+import util.logHelper
 
 DEFAULT_FLUGVOGEL_ROLEADDER_CFG_ERROR_MESSAGE_DELETION_DELAY = "errorMessageDeletionDelay"
+DEFAULT_FLUGVOGEL_ROLE_ASSIGNER_CFG_PERMISSIONS = "permissions"
 
 class FlugRoleAssigner(modules.FlugModule.FlugModule):
+    permissions: FlugPermissions.FlugPermissions = None
+
     def __init__(self, moduleName: str, configFilePath: str,
             client: FlugClient.FlugClient = None,
             channels: FlugChannels.FlugChannels = None,
@@ -114,8 +121,55 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
 
             return False
 
+        # initialize the permission config
+        try:
+            self.permissions = FlugPermissions.FlugPermissions(
+                self.cfg.c().get(DEFAULT_FLUGVOGEL_ROLE_ASSIGNER_CFG_PERMISSIONS),
+                self.roles, self.users
+            )
+        except Exception as e:
+            logging.critical(f"Failed to setup permission config for {self.moduleName}!")
+            logging.exception(e)
+
+            return False
+
+
         self.client.addSubscriber('on_ready', self.get_log_channel_on_ready)
         self.client.addSubscriber('on_message', self.process_message)
+
+        @self.client.tree.command(description="Neue Studiengangsrolle wählen")
+        @discord.app_commands.describe(
+            name="Name der Studiengangsrolle"
+
+        )
+        async def neue_rolle(interaction: discord.Interaction, name: str):
+            if not await util.flugPermissionsHelper.canDoWrapper("assignRoleCommand", interaction.user, None, self.permissions, self.logChannel):
+                return
+
+            if self.users.isUserDeactivated(str(interaction.user.id)):
+                await util.logHelper.logToChannelAndLog(self.logChannel, logging.WARNING, "Flug RoleAssigner Warning", f"Banned user '{interaction.user.mention}' should not be able to use /neue_rolle." )
+                return
+
+            role = discord.utils.get(interaction.guild.roles, name=name)
+             
+            if role == None:
+                await interaction.response.send_message(f"Die Rolle {name} existiert nicht.", ephemeral=True)
+                await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Invalid Role Request", f"{interaction.user.mention} tried to assign non-existent role '{name}' using /neue_rolle.")
+                return
+
+            if not self.roles.isRoleAssignable(str(role.id)):
+                await interaction.response.send_message(f"Die Rolle {name} ist nicht zuweisbar.", ephemeral=True)
+                await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Invalid Role Request", f"{interaction.user.mention} tried to assign non-assignable role '{name}' using /neue_rolle.")
+                return
+
+            for tmpRole in interaction.user.roles:
+                if tmpRole.is_assignable() and self.roles.isRoleAssignable(str(tmpRole.id)): #remove studiengangsrollen
+                    await interaction.user.remove_roles(tmpRole)
+
+            await interaction.user.add_roles(role)
+
+            await interaction.response.send_message(f"Die Rolle {role.name} wurde erfolgreich zugeteilt", ephemeral=True)
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Assigned Role", f"{interaction.user.mention} self-assigned Role '{role.name}'.")
 
         return True
 

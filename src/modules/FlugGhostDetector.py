@@ -86,12 +86,13 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
                 self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS)):
                 return
         # check whether the category is known (explicit config exists)
-        if self.categories.isCategoryKnown(str(message.channel.category.id)):
-            # check whether the category is in the ignore list
-            if util.isInList.isInList(
-                self.categories.getCategoryName(str(message.channel.category.id)),
-                self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CATEGORIES)):
-                return
+        if message.channel.category != None:
+            if self.categories.isCategoryKnown(str(message.channel.category.id)):
+                # check whether the category is in the ignore list
+                if util.isInList.isInList(
+                    self.categories.getCategoryName(str(message.channel.category.id)),
+                    self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CATEGORIES)):
+                    return
             
 
         # get the relevant config values
