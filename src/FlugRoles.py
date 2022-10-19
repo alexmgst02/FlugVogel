@@ -52,7 +52,7 @@ class FlugRoles:
     def getRoleID(self, name: str) -> int:
         # go through all role configs
         for key, config in self.roleConfig.c().items():
-            if type(config) == dict:
+            if type(config) == dict: #"ignore special roles like banned (...) which have an integer as value"
                 if config.get(DEFAULT_FLUGVOGEL_CFG_KEY_ROLES_NAME, None) == name:
                     return int(key)
 
