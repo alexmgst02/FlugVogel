@@ -2,6 +2,7 @@ import logging
 import asyncio
 
 import discord
+import FlugPermissions
 
 import modules.FlugModule
 import FlugClient
@@ -12,11 +13,12 @@ import FlugUsers
 import FlugConfig
 
 import util.logHelper
+import util.flugPermissionsHelper
 
 DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_CATEGORYID = "ticketCategoryId"
 DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_OLD_TICKET_MESSAGEID = "ticketMessageId"
 DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_MAX_CLOSED_ACTIVE_TICKETS = "maxClosedTickets"
-
+DEFAULT_FLUGVOGEL_TICKETS_CFG_PERMISSIONS = "permissions"
 
 
 class CancelButton(discord.ui.Button):
@@ -39,19 +41,22 @@ class CancelTicketButton(discord.ui.Button):
     ticketChannel : discord.CategoryChannel = None
     ticketCreator : discord.Member = None
     originalInteraction : discord.Interaction = None
+    permissions : FlugPermissions.FlugPermissions = None
 
-    def __init__(self, guild : discord.Guild, ticketChannel : discord.TextChannel, logChannel : discord.TextChannel, ticketCreator : discord.Member, originalInteraction : discord.Interaction):
+    def __init__(self, guild : discord.Guild, ticketChannel : discord.TextChannel, logChannel : discord.TextChannel, ticketCreator : discord.Member, originalInteraction : discord.Interaction, permissions : FlugPermissions.FlugPermissions):
         super().__init__(label="🔒Bestätigen🔒", style=discord.ButtonStyle.red)
         self.ticketChannel = ticketChannel
         self.guild = guild
         self.logChannel = logChannel
         self.ticketCreator = ticketCreator
         self.originalInteraction = originalInteraction
+        self.permissions = permissions
 
     async def callback(self, interaction : discord.Interaction):
         await interaction.response.defer()
 
-        if interaction.user.id == self.ticketCreator.id:
+        #Users with the 'manage_tickets' permission will delete the ticket channel - other users will simply deactivate the ticket and leave the channel open to moderators
+        if not await util.flugPermissionsHelper.canDoWrapper("manage_tickets", interaction.user, None, self.permissions, self.logChannel, False): 
             await self.ticketChannel.set_permissions(self.ticketCreator, read_messages=False, send_messages=False)
 
             #rename channel
@@ -93,17 +98,19 @@ class TicketButton(discord.ui.Button):
     logChannel : discord.TextChannel = None    
     ticketChannel : discord.TextChannel = None
     ticketCreator : discord.Member = None
+    permissions : FlugPermissions.FlugPermissions = None
 
-    def __init__(self, guild : discord.Guild, ticketChannel : discord.TextChannel, logChannel : discord.TextChannel, ticketCreator : discord.Member):
+    def __init__(self, guild : discord.Guild, ticketChannel : discord.TextChannel, logChannel : discord.TextChannel, ticketCreator : discord.Member, permissions : FlugPermissions.FlugPermissions):
         super().__init__(label="🔒Ticket schließen", style=discord.ButtonStyle.gray)
         self.ticketChannel = ticketChannel
         self.guild = guild
         self.logChannel = logChannel
         self.ticketCreator = ticketCreator
+        self.permissions = permissions
 
     async def callback(self, interaction : discord.Interaction):
         view = discord.ui.View(timeout=None)
-        closeBtn = CancelTicketButton(self.guild, self.ticketChannel, self.logChannel, self.ticketCreator, interaction)
+        closeBtn = CancelTicketButton(self.guild, self.ticketChannel, self.logChannel, self.ticketCreator, interaction, self.permissions)
         cancelButton = CancelButton(self.guild, interaction)
         view.add_item(closeBtn)
         view.add_item(cancelButton)
@@ -116,12 +123,15 @@ class CreateTicketButton(discord.ui.Button):
     logChannel : discord.TextChannel = None
     maxClosed : int = None
     ticketCategory : discord.CategoryChannel = None
-    def __init__(self, guild : discord.Guild, ticketCategory : discord.CategoryChannel, logChannel : discord.TextChannel, maxClosed : int):
+    permissions : FlugPermissions.FlugPermissions
+
+    def __init__(self, guild : discord.Guild, ticketCategory : discord.CategoryChannel, logChannel : discord.TextChannel, maxClosed : int, permissions :FlugPermissions.FlugPermissions):
         super().__init__(label="📩 Ticket erstellen", style=discord.ButtonStyle.gray)
         self.ticketCategory = ticketCategory
         self.guild = guild
         self.logChannel = logChannel
         self.maxClosed = maxClosed
+        self.permissions = permissions
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
@@ -171,7 +181,7 @@ class CreateTicketButton(discord.ui.Button):
 
         #setup ticket view and embed
         view = discord.ui.View(timeout=None)
-        ticketButton = TicketButton(self.guild, newChannel, self.logChannel, member)
+        ticketButton = TicketButton(self.guild, newChannel, self.logChannel, member, self.permissions)
         view.add_item(ticketButton)
 
         ticketEmbed = discord.Embed(color=discord.Color.green())
@@ -198,7 +208,7 @@ class FlugTickets(modules.FlugModule.FlugModule):
     ticketCategory : discord.CategoryChannel = None
     guild : discord.Guild = None
     maxClosedTickets : int = None
-
+    permissions : FlugPermissions.FlugPermissions = None
 
     def __init__(self, moduleName: str, configFilePath: str,
             client: FlugClient.FlugClient = None,
@@ -224,7 +234,7 @@ class FlugTickets(modules.FlugModule.FlugModule):
             ticketChannelEmbed.description = f"Erstellen Sie hier ein Ticket, indem Sie den 📩-Button drücken."
 
             view = discord.ui.View(timeout=None)
-            view.add_item(CreateTicketButton(self.guild, self.ticketCategory, self.logChannel, self.maxClosedTickets))
+            view.add_item(CreateTicketButton(self.guild, self.ticketCategory, self.logChannel, self.maxClosedTickets, self.permissions))
 
             oldMessageId : discord.Message = self.cfg.c().get(DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_OLD_TICKET_MESSAGEID)
 
@@ -300,6 +310,18 @@ class FlugTickets(modules.FlugModule.FlugModule):
 
         if self.maxClosedTickets == None:
             logging.critical(f"{self.moduleName} could not load Max closed-active tickets")
+
+            return False
+
+        # initialize the permission config
+        try:
+            self.permissions = FlugPermissions.FlugPermissions(
+                self.cfg.c().get(DEFAULT_FLUGVOGEL_TICKETS_CFG_PERMISSIONS),
+                self.roles, self.users
+            )
+        except Exception as e:
+            logging.critical(f"Failed to setup permission config for {self.moduleName}!")
+            logging.exception(e)
 
             return False
 
