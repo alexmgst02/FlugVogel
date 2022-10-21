@@ -19,7 +19,7 @@ DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_CATEGORYID = "ticketCategoryId"
 DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_OLD_TICKET_MESSAGEID = "ticketMessageId"
 DEFAULT_FLUGVOGEL_CFG_KEY_TICKETS_MAX_CLOSED_ACTIVE_TICKETS = "maxClosedTickets"
 DEFAULT_FLUGVOGEL_TICKETS_CFG_PERMISSIONS = "permissions"
-
+DEFAULT_FLUGVOGEL_TICKETS_CFG_PERMISSION_MANAGE_TICKETS = "manage_tickets"
 
 class CancelButton(discord.ui.Button):
     guild : discord.Guild = None
@@ -56,7 +56,7 @@ class CancelTicketButton(discord.ui.Button):
         await interaction.response.defer()
 
         #Users with the 'manage_tickets' permission will delete the ticket channel - other users will simply deactivate the ticket and leave the channel open to moderators
-        if self.permissions.canDo("manage_tickets", interaction.user, None) < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
+        if self.permissions.canDo(DEFAULT_FLUGVOGEL_TICKETS_CFG_PERMISSION_MANAGE_TICKETS, interaction.user, None) < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
             await self.ticketChannel.set_permissions(self.ticketCreator, read_messages=False, send_messages=False)
 
             #rename channel

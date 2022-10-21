@@ -87,7 +87,7 @@ class FlugVoter(modules.FlugModule.FlugModule):
 
         self.maxWaitTime = self.cfg.c().get(DEFAULT_FLUGVOGEL_VOTER_CFG_MAX_WAIT_TIME)
 
-        if self.maxVotes == None:
+        if self.maxWaitTime == None:
             logging.critical(f"Could not load {DEFAULT_FLUGVOGEL_VOTER_CFG_MAX_WAIT_TIME} for '{self.moduleName}' from '{self.configFilePath}'!")
             
             return False
