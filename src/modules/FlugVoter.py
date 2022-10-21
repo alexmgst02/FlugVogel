@@ -5,6 +5,7 @@ import datetime
 
 import discord
 
+import util.flugTextLength
 import util.flugVoterHelper
 import util.flugPermissionsHelper
 import util.logHelper
@@ -26,7 +27,6 @@ DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS = "permissions"
 DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_LONG_VOTE = "long_vote"
 DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_MORE_VOTES  = "bypass_vote_count"
 
-DEFAULT_DISCORD_MAX_LABEL_LENGTH = 80
 
 class FlugVoter(modules.FlugModule.FlugModule):
     cfg: FlugConfig.FlugConfig = None
@@ -154,11 +154,11 @@ class FlugVoter(modules.FlugModule.FlugModule):
 
             #check if lengths are valid
             for opt in options:
-                if len(opt) > DEFAULT_DISCORD_MAX_LABEL_LENGTH:
+                if not util.flugTextLength.isLabelLengthValid(opt):
                     await util.logHelper.logToChannelAndLog(self.logChannel, logging.WARNING, "🚧 Invalid Vote Request 🚧",
                     f"{self.moduleName} could not start Vote because invalid option with length {len(opt)} was passed by {interaction.user.mention}.")      
 
-                    await interaction.response.send_message(f"Bitte geben Sie weniger als {DEFAULT_DISCORD_MAX_LABEL_LENGTH} Zeichen bei den Optionen ein.", ephemeral=True)
+                    await interaction.response.send_message(f"Bitte geben Sie weniger als {util.flugTextLength.DEFAULT_DISCORD_MAX_LABEL_LENGTH} Zeichen bei den Optionen ein.", ephemeral=True)
                     return
         
 
@@ -177,7 +177,7 @@ class FlugVoter(modules.FlugModule.FlugModule):
             embed.description = f"{interaction.user.mention} hat eine Abstimmung gestartet:\n **{content}**\n Die Abstimmung endet: {endString}"
         
 
-            if len(embed.description) > 2000:
+            if not util.flugTextLength.isMessageLengthValid(embed.description):
                 logging.critical(f"{self.moduleName} could not build embed.")
                 return 
 

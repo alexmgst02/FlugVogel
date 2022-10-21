@@ -13,6 +13,7 @@ import FlugPermissions
 
 import util.flugPermissionsHelper
 import util.logHelper
+import util.flugTextLength
 
 DEFAULT_FLUGVOGEL_ROLEADDER_CFG_ERROR_MESSAGE_DELETION_DELAY = "errorMessageDeletionDelay"
 DEFAULT_FLUGVOGEL_ROLE_ASSIGNER_CFG_PERMISSIONS = "permissions"
@@ -60,6 +61,11 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
             await self.logChannel.send(
                 f"Banned user '{message.author.name}' ({message.author.id}) should not be able to send in {message.channel.name} ({message.channel.id})!"
             )
+            await message.delete()
+            return
+
+        if not util.flugTextLength.isRoleNameLengthValid(message.content):
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.WARNING, "Flug RoleAssigner Warning", f"{message.author.mention}' entered role-name of length {len(message.content)}.")
             await message.delete()
             return
 
@@ -143,6 +149,8 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
 
         )
         async def neue_rolle(interaction: discord.Interaction, name: str):
+            await interaction.response.defer(ephemeral=True)
+
             if not await util.flugPermissionsHelper.canDoWrapper("assignRoleCommand", interaction.user, None, self.permissions, self.logChannel):
                 return
 
@@ -150,15 +158,20 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
                 await util.logHelper.logToChannelAndLog(self.logChannel, logging.WARNING, "Flug RoleAssigner Warning", f"Banned user '{interaction.user.mention}' should not be able to use /neue_rolle." )
                 return
 
+            if not util.flugTextLength.isRoleNameLengthValid(name):
+                await util.logHelper.logToChannelAndLog(self.logChannel, logging.WARNING, "Flug RoleAssigner Warning", f"{interaction.user.mention}' entered role-name of length {len(name)}.")
+                await interaction.followup.send(f"Der eingegebene Parameter ist zu lang. Dieser Vorfall wird gemeldet🚔!", ephemeral=True)
+                return
+
             role = discord.utils.get(interaction.guild.roles, name=name)
              
             if role == None:
-                await interaction.response.send_message(f"Die Rolle {name} existiert nicht.", ephemeral=True)
+                await interaction.followup.send(f"Die Rolle {name} existiert nicht.", ephemeral=True)
                 await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Invalid Role Request", f"{interaction.user.mention} tried to assign non-existent role '{name}' using /neue_rolle.")
                 return
 
             if not self.roles.isRoleAssignable(str(role.id)):
-                await interaction.response.send_message(f"Die Rolle {name} ist nicht zuweisbar.", ephemeral=True)
+                await interaction.followup.send(f"Die Rolle {name} ist nicht zuweisbar.", ephemeral=True)
                 await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Invalid Role Request", f"{interaction.user.mention} tried to assign non-assignable role '{name}' using /neue_rolle.")
                 return
 
@@ -168,7 +181,7 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
 
             await interaction.user.add_roles(role)
 
-            await interaction.response.send_message(f"Die Rolle {role.name} wurde erfolgreich zugeteilt", ephemeral=True)
+            await interaction.followup.send(f"Die Rolle {role.name} wurde erfolgreich zugeteilt", ephemeral=True)
             await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Assigned Role", f"{interaction.user.mention} self-assigned Role '{role.name}'.")
 
         return True

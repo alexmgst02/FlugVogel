@@ -59,7 +59,6 @@ class FlugAltklausuren(modules.FlugModule.FlugModule):
         # setup the command
         @self.client.tree.command(description="Zeigt einen Verweis zu den Freitagsrunde-Altklausuren (...) zum Modul des aktuellen Kanals.")
         async def altklausuren(interaction: discord.Interaction):
-            """Plays a fair game of dice."""
             await interaction.response.defer()
 
             # get the name of the channel

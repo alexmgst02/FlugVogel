@@ -15,7 +15,7 @@ import FlugConfig
 import FlugPermissions
 import util.flugPermissionsHelper
 import util.isInList
-
+import util.flugTextLength
 # config keys
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_THRESHOLD = "threshold"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_ONLY_PINGS = "onlyPings"
@@ -148,7 +148,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
 
         embed.description += f"\nAuthor: {message.author.mention}\nDeleted after {difference} seconds\nOriginal Message: "
 
-        if len(embed.description) + len(message.content) >= 2000:
+        if not util.flugTextLength.isMessageLengthValid(embed.description + message.content):
             embed.description += "-- Original Message Too Long --"
         else:
             embed.description += message.content
