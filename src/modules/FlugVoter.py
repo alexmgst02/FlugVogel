@@ -118,7 +118,7 @@ class FlugVoter(modules.FlugModule.FlugModule):
         )
         async def abstimmung(interaction: discord.Interaction, waitTime : int, content : str, option1 : str, option2 : str, option3 : typing.Optional[str], option4: typing.Optional[str], option5: typing.Optional[str]):
             
-          
+
             if waitTime >= self.maxWaitTime:
                 if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_LONG_VOTE, interaction.user, None,
                 self.permissions, self.logChannel):
@@ -131,12 +131,12 @@ class FlugVoter(modules.FlugModule.FlugModule):
             if voteAmount >= self.maxVotes:
                 if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_MORE_VOTES,
                 interaction.user, None, self.permissions, self.logChannel):
-                    await interaction.response.send_message(f"Sie können maximal {self.maxVotes} Abstimmungen gleichzeitig eröffnen! Es laufen bereits {voteAmount} auf Ihrem Namen.", ephemeral=True)
+                    await interaction.response.send_message(f"Sie können maximal {self.maxVotes} Abstimmungen gleichzeitig eröffnen! Es laufen bereits {voteAmount} auf Ihrem Namen. Dieser Vorfall wird gemeldet🚔!", ephemeral=True)
                  
                     return
         
-            if waitTime < 0:
-                await interaction.response.send_message("Bitte geben Sie eine positive Zahl als Abstimmungszeit ein.", ephemeral=True)
+            if waitTime <= 0:
+                await interaction.response.send_message("Bitte geben Sie eine größere Zahl als 0 als Abstimmungszeit ein.", ephemeral=True)
                 await util.logHelper.logToChannelAndLog(self.logChannel, logging.WARNING, "🚧 Invalid Vote Request 🚧",
                 f"{interaction.user.mention} passed invalid wait time: {waitTime}")              
   
@@ -158,7 +158,7 @@ class FlugVoter(modules.FlugModule.FlugModule):
                     await util.logHelper.logToChannelAndLog(self.logChannel, logging.WARNING, "🚧 Invalid Vote Request 🚧",
                     f"{self.moduleName} could not start Vote because invalid option with length {len(opt)} was passed by {interaction.user.mention}.")      
 
-                    await interaction.response.send_message(f"Bitte geben Sie weniger als {util.flugTextLength.DEFAULT_DISCORD_MAX_LABEL_LENGTH} Zeichen bei den Optionen ein.", ephemeral=True)
+                    await interaction.response.send_message(f"Bitte geben Sie weniger als {util.flugTextLength.DEFAULT_DISCORD_MAX_LABEL_LENGTH} Zeichen bei den Optionen ein. Dieser Vorfall wird gemeldet🚔!", ephemeral=True)
                     return
         
 
