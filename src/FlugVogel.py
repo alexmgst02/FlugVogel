@@ -51,6 +51,8 @@ class FlugVogel:
     _initSuccess = False # Set to `True` once initialization succeeded
 
     def __init__(self, version: str, configPath: str = DEFAULT_FLUGVOGEL_CONFIG_PATH, tokenPath: str = DEFAULT_FLUGVOGEL_TOKEN_PATH):
+        self.version = version
+
         # set up the logger
         FlugLoggerConfig.FlugLoggerConfig.init()
 
@@ -166,6 +168,7 @@ class FlugVogel:
             return
 
         # start the client
+        logging.info(f"Starting FlugVogel Version {self.version}.")
         self.client.run(self.creds.getToken(), log_handler=None)
 
 if __name__ == "__main__":
@@ -175,6 +178,6 @@ if __name__ == "__main__":
 
         sys.exit(-1)
 
-    vogel = FlugVogel("0.0.1", configPath=sys.argv[1], tokenPath=sys.argv[2])
+    vogel = FlugVogel("1.0", configPath=sys.argv[1], tokenPath=sys.argv[2])
 
     vogel.flieg()
