@@ -331,8 +331,8 @@ class FlugPermissions:
         Returns `FlugPermissions.CAN_DO*`.
         """
         # check whether the member is in the special superUser list
-        if util.isInList.isInList(str(id), self.permissionsDict.get(commandName).get(FLUG_PERMISSIONS_CFG_MEMBER_SUPERUSER_LIST, None)):
-            return FlugPermissions.CAN_DO_HARD_YES
+        if util.isInList.isInList(str(member.id), self.permissionsDict.get(commandName).get(FLUG_PERMISSIONS_CFG_MEMBER_SUPERUSER_LIST, None)):
+            return FlugPermissions.CAN_DO_SUPER_YES
 
         # first check the member directly
         r = self.__canDoGeneric__(commandName, member.id,
