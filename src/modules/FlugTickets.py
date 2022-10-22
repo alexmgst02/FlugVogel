@@ -187,7 +187,7 @@ class CreateTicketButton(discord.ui.Button):
         newChannel = await self.ticketCategory.create_text_channel(ticketChannelName)
     
         #get member to set perms
-        member = self.guild.get_member(interaction.user.id)
+        member = interaction.user
 
         #update perms
         await newChannel.set_permissions(member, read_messages=True, send_messages=True)
@@ -343,7 +343,33 @@ class FlugTickets(modules.FlugModule.FlugModule):
         # register the event handler to get the log and ticket channels
         self.client.addSubscriber("on_ready", self.get_channels_on_ready)
         self.client.addSubscriber("on_ready", self.setup_tickets_on_startup)
-      
+
+        #command to add user to a ticket
+        @self.client.tree.command(description="Add user to ticket.")
+        @discord.app_commands.describe(
+            member="Member to add to ticket"
+        )
+        async def add_user_to_ticket(interaction: discord.Interaction, member: discord.Member):
+            await interaction.response.defer(ephemeral=True)
+
+            #check permissiomns
+            if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_TICKETS_CFG_PERMISSION_MANAGE_TICKETS, interaction.user, None,
+            self.permissions, self.logChannel):
+
+                await interaction.followup.send("Du hast keine Befugnise hierfür. Dieser Vorfall wird gemeldet🚔!", ephemeral=True)
+                return
+            
+            #check if channel is ticket channel
+            if interaction.channel.category != self.ticketCategory:
+                await interaction.followup.send("Command only works in sub-channels of ticket category!", ephemeral=True)
+                return
+
+            #add user to ticket
+            await interaction.channel.set_permissions(member, read_messages=True, send_messages=True)
+
+            await interaction.followup.send(f"{member.mention} added to {interaction.channel.mention}.")
+            await interaction.channel.send(f"{member.mention} hat den Raum betreten.")
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "FlugTickets", f"{interaction.user.mention} has added {member.mention} to ticket {interaction.channel.mention}.")
 
         return True
 

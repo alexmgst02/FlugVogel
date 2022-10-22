@@ -26,6 +26,8 @@ class FlugClient(discord.Client):
             if isinstance(error, discord.app_commands.CommandOnCooldown):
                 await interaction.response.send_message(f"Nicht so schnell🚔! Versuche es in {error.retry_after} Sekunden erneut.", ephemeral=True)
 
+            logging.warning(str(error))
+
     # this function is called by the client internally - don't touch
     async def setup_hook(self):
         # This copies the global commands over to your guild.
