@@ -2,6 +2,8 @@ import logging
 import asyncio
 
 import discord
+from discord.ext import commands
+
 import FlugPermissions
 
 import modules.FlugModule
@@ -100,6 +102,7 @@ class TicketButton(discord.ui.Button):
     ticketChannel : discord.TextChannel = None
     ticketCreator : discord.Member = None
     permissions : FlugPermissions.FlugPermissions = None
+    cooldown : commands.CooldownMapping = None
 
     def __init__(self, guild : discord.Guild, ticketChannel : discord.TextChannel, logChannel : discord.TextChannel, ticketCreator : discord.Member, permissions : FlugPermissions.FlugPermissions):
         super().__init__(label="🔒Ticket schließen", style=discord.ButtonStyle.gray)
@@ -108,8 +111,16 @@ class TicketButton(discord.ui.Button):
         self.logChannel = logChannel
         self.ticketCreator = ticketCreator
         self.permissions = permissions
+        self.cooldown = commands.CooldownMapping.from_cooldown(1, 10.0, commands.BucketType.member)
 
+   
     async def callback(self, interaction : discord.Interaction):
+        retry = self.cooldown.get_bucket(interaction.message).update_rate_limit()
+        #Check cooldown
+        if retry:
+            await interaction.response.send_message(f"Nicht so schnell. Versuche es in {retry} Sekunden erneut. ", ephemeral=True)
+            return
+
         view = discord.ui.View(timeout=None)
         closeBtn = CancelTicketButton(self.guild, self.ticketChannel, self.logChannel, self.ticketCreator, interaction, self.permissions)
         cancelButton = CancelButton(self.guild, interaction)

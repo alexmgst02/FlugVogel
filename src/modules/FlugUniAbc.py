@@ -1,3 +1,4 @@
+from cgi import test
 import logging
 
 import discord
@@ -60,6 +61,7 @@ class FlugUniAbc(modules.FlugModule.FlugModule):
 
         # setup the command
         @self.client.tree.command(description="Zeigt einen Verweis auf das Uni-ABC der Freitagsrunde.")
+        @discord.app_commands.checks.cooldown(1, 5.0)
         async def uniabc(interaction: discord.Interaction):
             """Plays a fair game of dice."""
             await interaction.response.defer()
@@ -92,6 +94,11 @@ class FlugUniAbc(modules.FlugModule.FlugModule):
             )
 
             return
+    
+        @self.client.tree.error
+        async def on_test_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+            if isinstance(error, discord.app_commands.CommandOnCooldown):
+                await interaction.response.send_message(f"Nicht so schnell🚔! Versuche es in {error.retry_after} Sekunden erneut.", ephemeral=True)
 
         return True
 

@@ -26,6 +26,12 @@ class FlugClient(discord.Client):
         self.tree.copy_global_to(guild=self.guildID)
         await self.tree.sync(guild=self.guildID)
 
+    #error handling
+    async def on_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+        if isinstance(error, discord.app_commands.CommandOnCooldown):
+            await interaction.response.send_message(f"Nicht so schnell🚔! Versuche es in {error.retry_after} Sekunden erneut.", ephemeral=True)
+
+
     def subscribeTo(self, eventName: str) -> typing.Callable[[typing.Coroutine], typing.Coroutine]:
         def decorator(func: typing.Coroutine) -> typing.Coroutine:
             self.addSubscriber(eventName, func)
