@@ -20,6 +20,7 @@ FLUG_PERMISSIONS_CFG_TARGET_MEMBER_ALLOW_LIST = "targetMemberAllowlist"
 FLUG_PERMISSIONS_CFG_TARGET_MEMBER_BLOCK_LIST = "targetMemberBlocklist"
 FLUG_PERMISSIONS_CFG_TARGET_ROLE_ALLOW_LIST = "targetRoleAllowlist"
 FLUG_PERMISSIONS_CFG_TARGET_ROLE_BLOCK_LIST = "targetRoleBlocklist"
+FLUG_PERMISSIONS_CFG_MEMBER_SUPERUSER_LIST = "superUserList"
 
 class FlugPermissions:
     permissionsDict: dict = {}
@@ -36,8 +37,9 @@ class FlugPermissions:
     CAN_DO_WEAK_NO = 2     # Command can't be done - Determined by default setting
     CAN_DO_WEAK_YES = 3    # Command can be done - Determined by default setting
     CAN_DO_HARD_YES = 4    # Command can be done - Explicitly set (by role or member)
+    CAN_DO_SUPER_YES = 5   # Command can be done - SuperUser executing it
 
-    CAN_DO_STRINGS = ["CAN_DO_CMD_UNKNOWN", "CAN_DO_HARD_NO", "CAN_DO_WEAK_NO", "CAN_DO_WEAK_YES", "CAN_DO_HARD_YES"]
+    CAN_DO_STRINGS = ["CAN_DO_CMD_UNKNOWN", "CAN_DO_HARD_NO", "CAN_DO_WEAK_NO", "CAN_DO_WEAK_YES", "CAN_DO_HARD_YES", "CAN_DO_SUPER_YES"]
 
     def __init__(self, permissionsDict: dict, roles: FlugRoles.FlugRoles, members: FlugUsers.FlugUsers):
         """Constructor for the FlugPermissions class
@@ -47,9 +49,9 @@ class FlugPermissions:
 
         ```json
         {
-            "exampleCommandName": {            /* Starts the Permissions Block for a command */
-                "defaultAllow": true,          /* true: members can execute the command unless specified otherwise by a blocklist */
-                "defaultTargetAllow": true,    /* true: members can be targeted by the command unless specified otherwise by a blocklist */
+            "exampleCommandName": {          /* Starts the Permissions Block for a command */
+                "defaultAllow": true,        /* true: members can execute the command unless specified otherwise by a blocklist */
+                "defaultTargetAllow": true,  /* true: members can be targeted by the command unless specified otherwise by a blocklist */
                 "memberAllowlist": [],       /* memberIDs that can use the command - ignored if defaultAllow is true */
                 "memberBlocklist": [],       /* memberIDs that can't use the command - ignored if defaultAllow is false */
                 "roleAllowlist": [],         /* RoleIDs that can use the command - ignored if defaultAllow is true */
@@ -58,6 +60,7 @@ class FlugPermissions:
                 "targetMemberBlocklist": [], /* memberIDs that can't be targeted by the command - ignored if defaultAllow is false */
                 "targetRoleAllowlist": [],   /* RoleIDs that can be targeted by the command - ignored if defaultTargetAllow is true */
                 "targetRoleBlocklist": [],   /* RoleIDs that can't be targeted by the command - ignored if defaultTargetAllow is false */
+                "superUserList": []          /* SuperUser member IDs - can execute every command, ignoring target permissions */   
             }
         }
         ```
@@ -92,9 +95,10 @@ class FlugPermissions:
                 FLUG_PERMISSIONS_CFG_DEFAULT_TARGET_ALLOW: config.get(FLUG_PERMISSIONS_CFG_DEFAULT_TARGET_ALLOW)
             })
 
-            # translate the member lists
+            # translate the member lists including the super user list
             for listKey in [FLUG_PERMISSIONS_CFG_MEMBER_ALLOW_LIST, FLUG_PERMISSIONS_CFG_MEMBER_BLOCK_LIST,
-                            FLUG_PERMISSIONS_CFG_TARGET_MEMBER_ALLOW_LIST, FLUG_PERMISSIONS_CFG_TARGET_MEMBER_BLOCK_LIST]:
+                            FLUG_PERMISSIONS_CFG_TARGET_MEMBER_ALLOW_LIST, FLUG_PERMISSIONS_CFG_TARGET_MEMBER_BLOCK_LIST,
+                            FLUG_PERMISSIONS_CFG_MEMBER_SUPERUSER_LIST]:
                 tmp = self.__memberNameList2IDList__(permissionsDict.get(command).get(listKey))
 
                 if tmp == None:
@@ -326,6 +330,10 @@ class FlugPermissions:
 
         Returns `FlugPermissions.CAN_DO*`.
         """
+        # check whether the member is in the special superUser list
+        if util.isInList.isInList(str(member.id), self.permissionsDict.get(commandName).get(FLUG_PERMISSIONS_CFG_MEMBER_SUPERUSER_LIST, None)):
+            return FlugPermissions.CAN_DO_SUPER_YES
+
         # first check the member directly
         r = self.__canDoGeneric__(commandName, member.id,
             FLUG_PERMISSIONS_CFG_MEMBER_BLOCK_LIST,
@@ -379,10 +387,12 @@ class FlugPermissions:
         """
         r1 = r2 = FlugPermissions.CAN_DO_HARD_YES
 
+        # check the user permissions if a activeMember is specified
         if activeMember != None:
             r1 = self.canMemberDo(commandName, activeMember, checkRoles=True)
 
-        if targetMember != None:
+        # check target user permissions if a target is specified and the user has no overwrite permissions
+        if targetMember != None and r1 != FlugPermissions.CAN_DO_SUPER_YES:
             r2 = self.canMemberBeTargeted(commandName, targetMember, checkRoles=True)
 
         return (r1 if r1 < r2 else r2)

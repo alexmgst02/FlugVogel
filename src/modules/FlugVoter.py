@@ -5,6 +5,7 @@ import datetime
 
 import discord
 
+import util.flugTextLength
 import util.flugVoterHelper
 import util.flugPermissionsHelper
 import util.logHelper
@@ -12,6 +13,7 @@ import util.logHelper
 import modules.FlugModule
 import FlugClient
 import FlugChannels
+import FlugCategories
 import FlugRoles
 import FlugUsers
 import FlugConfig
@@ -25,7 +27,6 @@ DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS = "permissions"
 DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_LONG_VOTE = "long_vote"
 DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_MORE_VOTES  = "bypass_vote_count"
 
-DEFAULT_DISCORD_MAX_LABEL_LENGTH = 80
 
 class FlugVoter(modules.FlugModule.FlugModule):
     cfg: FlugConfig.FlugConfig = None
@@ -40,9 +41,10 @@ class FlugVoter(modules.FlugModule.FlugModule):
             client: FlugClient.FlugClient = None,
             channels: FlugChannels.FlugChannels = None,
             roles: FlugRoles.FlugRoles = None, 
-            users: FlugUsers.FlugUsers = None):
+            users: FlugUsers.FlugUsers = None,
+            categories: FlugCategories.FlugCategories = None):
         # setup the super class
-        super().__init__(moduleName, configFilePath, client, channels, roles, users)
+        super().__init__(moduleName, configFilePath, client, channels, roles, users, categories)
 
         # greet-message
         logging.info("I am '%s'! I got initialized with the config file '%s'!" % (self.moduleName, self.configFilePath))
@@ -85,7 +87,7 @@ class FlugVoter(modules.FlugModule.FlugModule):
 
         self.maxWaitTime = self.cfg.c().get(DEFAULT_FLUGVOGEL_VOTER_CFG_MAX_WAIT_TIME)
 
-        if self.maxVotes == None:
+        if self.maxWaitTime == None:
             logging.critical(f"Could not load {DEFAULT_FLUGVOGEL_VOTER_CFG_MAX_WAIT_TIME} for '{self.moduleName}' from '{self.configFilePath}'!")
             
             return False
@@ -116,7 +118,7 @@ class FlugVoter(modules.FlugModule.FlugModule):
         )
         async def abstimmung(interaction: discord.Interaction, waitTime : int, content : str, option1 : str, option2 : str, option3 : typing.Optional[str], option4: typing.Optional[str], option5: typing.Optional[str]):
             
-          
+
             if waitTime >= self.maxWaitTime:
                 if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_LONG_VOTE, interaction.user, None,
                 self.permissions, self.logChannel):
@@ -129,12 +131,12 @@ class FlugVoter(modules.FlugModule.FlugModule):
             if voteAmount >= self.maxVotes:
                 if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_VOTER_CFG_PERMISSIONS_MORE_VOTES,
                 interaction.user, None, self.permissions, self.logChannel):
-                    await interaction.response.send_message(f"Sie können maximal {self.maxVotes} Abstimmungen gleichzeitig eröffnen! Es laufen bereits {voteAmount} auf Ihrem Namen.", ephemeral=True)
+                    await interaction.response.send_message(f"Sie können maximal {self.maxVotes} Abstimmungen gleichzeitig eröffnen! Es laufen bereits {voteAmount} auf Ihrem Namen. Dieser Vorfall wird gemeldet🚔!", ephemeral=True)
                  
                     return
         
-            if waitTime < 0:
-                await interaction.response.send_message("Bitte geben Sie eine positive Zahl als Abstimmungszeit ein.", ephemeral=True)
+            if waitTime <= 0:
+                await interaction.response.send_message("Bitte geben Sie eine größere Zahl als 0 als Abstimmungszeit ein.", ephemeral=True)
                 await util.logHelper.logToChannelAndLog(self.logChannel, logging.WARNING, "🚧 Invalid Vote Request 🚧",
                 f"{interaction.user.mention} passed invalid wait time: {waitTime}")              
   
@@ -152,11 +154,11 @@ class FlugVoter(modules.FlugModule.FlugModule):
 
             #check if lengths are valid
             for opt in options:
-                if len(opt) > DEFAULT_DISCORD_MAX_LABEL_LENGTH:
+                if not util.flugTextLength.isLabelLengthValid(opt):
                     await util.logHelper.logToChannelAndLog(self.logChannel, logging.WARNING, "🚧 Invalid Vote Request 🚧",
                     f"{self.moduleName} could not start Vote because invalid option with length {len(opt)} was passed by {interaction.user.mention}.")      
 
-                    await interaction.response.send_message(f"Bitte geben Sie weniger als {DEFAULT_DISCORD_MAX_LABEL_LENGTH} Zeichen bei den Optionen ein.", ephemeral=True)
+                    await interaction.response.send_message(f"Bitte geben Sie weniger als {util.flugTextLength.DEFAULT_DISCORD_MAX_LABEL_LENGTH} Zeichen bei den Optionen ein. Dieser Vorfall wird gemeldet🚔!", ephemeral=True)
                     return
         
 
@@ -175,7 +177,7 @@ class FlugVoter(modules.FlugModule.FlugModule):
             embed.description = f"{interaction.user.mention} hat eine Abstimmung gestartet:\n **{content}**\n Die Abstimmung endet: {endString}"
         
 
-            if len(embed.description) > 2000:
+            if not util.flugTextLength.isMessageLengthValid(embed.description):
                 logging.critical(f"{self.moduleName} could not build embed.")
                 return 
 

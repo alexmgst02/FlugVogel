@@ -6,6 +6,7 @@ import FlugClient
 import FlugUsers
 import FlugRoles
 import FlugConfig
+import FlugCategories
 
 import modules.FlugModule
 
@@ -26,17 +27,20 @@ class FlugModules:
     channels: FlugChannels.FlugChannels = None # FlugChannel instance for the modules
     users: FlugUsers.FlugUsers = None          # FlugUsers instance for the modules
     roles: FlugRoles.FlugRoles = None          # FlugRoles instance for the modules
+    categories: FlugCategories.FlugCategories  #FlugCategories instance for the modules
 
     def __init__(self, flugConfigPath: str,
             client: FlugClient.FlugClient,
             channelConfig: FlugChannels.FlugChannels,
             userConfig: FlugUsers.FlugUsers,
-            roleConfig: FlugRoles.FlugRoles):
+            roleConfig: FlugRoles.FlugRoles,
+            categoryConfig: FlugCategories.FlugCategories):
         self._moduleConfigPath = flugConfigPath
         self.client = client
         self.channels = channelConfig
         self.users = userConfig
         self.roles = roleConfig
+        self.categories = categoryConfig
 
         return
 
@@ -92,7 +96,7 @@ class FlugModules:
             try:
                 module : modules.FlugModule.FlugModule = _module_cls(
                     moduleCfg.get("name"), moduleCfg.get("config"),
-                    self.client, self.channels, self.roles, self.users
+                    self.client, self.channels, self.roles, self.users, self.categories
                 )
             except Exception as e:
                 logging.critical("Failed to initialize module '%s'!" % moduleCfg.get(DEFAULT_FLUGVOGEL_MODULES_CFG_NAME))

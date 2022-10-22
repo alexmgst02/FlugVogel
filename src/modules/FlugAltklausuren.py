@@ -1,6 +1,7 @@
 import logging
 
 import discord
+import FlugCategories
 
 import modules.FlugModule
 import FlugClient
@@ -19,9 +20,10 @@ class FlugAltklausuren(modules.FlugModule.FlugModule):
             client: FlugClient.FlugClient = None,
             channels: FlugChannels.FlugChannels = None,
             roles: FlugRoles.FlugRoles = None, 
-            users: FlugUsers.FlugUsers = None):
+            users: FlugUsers.FlugUsers = None,
+            categories: FlugCategories.FlugCategories = None):
         # setup the super class
-        super().__init__(moduleName, configFilePath, client, channels, roles, users)
+        super().__init__(moduleName, configFilePath, client, channels, roles, users, categories)
 
         # greet-message
         logging.info("I am '%s'! I got initialized with the config file '%s'!" % (self.moduleName, self.configFilePath))
@@ -57,7 +59,6 @@ class FlugAltklausuren(modules.FlugModule.FlugModule):
         # setup the command
         @self.client.tree.command(description="Zeigt einen Verweis zu den Freitagsrunde-Altklausuren (...) zum Modul des aktuellen Kanals.")
         async def altklausuren(interaction: discord.Interaction):
-            """Plays a fair game of dice."""
             await interaction.response.defer()
 
             # get the name of the channel

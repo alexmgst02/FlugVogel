@@ -9,6 +9,7 @@ DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG = "log"
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_REPORT = "report"
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_NAME = "name"
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_IS_ROLE_ASSIGNMENT = "isRoleAssignmentChannel"
+DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_TICKETS = "ticketChannel"
 
 class FlugChannels:
     _channelConfigPath: dict = None             # store the channel config path
@@ -76,9 +77,19 @@ class FlugChannels:
 
         return int(channelId)
 
+    def getTicketChannelId(self):
+        #get the config for the report channel
+        channelId = self.getChannelConfig(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_TICKETS)
+
+        if channelId == None:
+            return None
+
+        return int(channelId)
+
     def isChannelRoleAssignment(self, id: str) -> bool:
         if self.isChannelKnown(id):
             if self.getChannelConfig(id).get(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_IS_ROLE_ASSIGNMENT, False) == True:
                 return True
         
         return False 
+

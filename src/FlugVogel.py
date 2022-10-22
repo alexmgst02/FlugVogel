@@ -9,6 +9,7 @@ import FlugConfig
 import FlugLoggerConfig
 import FlugCredentials
 import FlugChannels
+import FlugCategories
 import FlugUsers
 import FlugRoles
 import FlugModules
@@ -29,6 +30,7 @@ DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FILE_SIZE = "logFileSize"
 DEFAULT_FLUGVOGEL_CFG_KEY_LOG_CONFIG_FILE_NUM = "logFileNum"
 
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS = "channels"
+DEFAULT_FLUGVOGEL_CFG_KEY_CATEGORIES = "categories"
 DEFAULT_FLUGVOGEL_CFG_KEY_USERS = "users"
 DEFAULT_FLUGVOGEL_CFG_KEY_ROLES = "roles"
 DEFAULT_FLUGVOGEL_CFG_KEY_MODULES = "modules"
@@ -42,12 +44,15 @@ class FlugVogel:
     creds: FlugCredentials.FlugCredentials = None # FlugCredentials instance
     client: FlugClient.FlugClient = None          # FlugClient instance
     channels: FlugChannels.FlugChannels = None    # FlugChannels instance
+    categories: FlugCategories.FlugCategories     # FlugCategories instance
     users: FlugUsers.FlugUsers = None             # FlugUsers instance
     roles: FlugRoles.FlugRoles = None             # FlugRoles instance
     modules: FlugModules.FlugModules = None       # FlugModules instance
     _initSuccess = False # Set to `True` once initialization succeeded
 
     def __init__(self, version: str, configPath: str = DEFAULT_FLUGVOGEL_CONFIG_PATH, tokenPath: str = DEFAULT_FLUGVOGEL_TOKEN_PATH):
+        self.version = version
+
         # set up the logger
         FlugLoggerConfig.FlugLoggerConfig.init()
 
@@ -95,6 +100,15 @@ class FlugVogel:
 
             return
 
+        # setup the category config
+        self.categories = FlugCategories.FlugCategories(self.cfg.c()[DEFAULT_FLUGVOGEL_CFG_KEY_CATEGORIES])
+
+        if not self.categories.loadCfg():
+            logging.critical("Failed to load FlugVogel-Categories!")
+
+            return
+
+
         # setup the user config
         self.users = FlugUsers.FlugUsers(self.cfg.c()[DEFAULT_FLUGVOGEL_CFG_KEY_USERS])
 
@@ -120,7 +134,7 @@ class FlugVogel:
         # load and initialize modules
         self.modules = FlugModules.FlugModules(
             self.cfg.c()[DEFAULT_FLUGVOGEL_CFG_KEY_MODULES],
-            self.client, self.channels, self.users, self.roles
+            self.client, self.channels, self.users, self.roles, self.categories
         )
 
         if not self.modules.loadCfg():
@@ -154,6 +168,7 @@ class FlugVogel:
             return
 
         # start the client
+        logging.info(f"Starting FlugVogel Version {self.version}.")
         self.client.run(self.creds.getToken(), log_handler=None)
 
 if __name__ == "__main__":
@@ -163,6 +178,6 @@ if __name__ == "__main__":
 
         sys.exit(-1)
 
-    vogel = FlugVogel("0.0.1", configPath=sys.argv[1], tokenPath=sys.argv[2])
+    vogel = FlugVogel("1.0", configPath=sys.argv[1], tokenPath=sys.argv[2])
 
     vogel.flieg()

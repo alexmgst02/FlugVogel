@@ -1,4 +1,3 @@
-from calendar import c
 import logging
 import datetime
 import json
@@ -9,19 +8,21 @@ import discord
 import modules.FlugModule
 import FlugClient
 import FlugChannels
+import FlugCategories
 import FlugRoles
 import FlugUsers
 import FlugConfig
 import FlugPermissions
 import util.flugPermissionsHelper
 import util.isInList
-
+import util.flugTextLength
 # config keys
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_THRESHOLD = "threshold"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_ONLY_PINGS = "onlyPings"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS = "permissions"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_LOG_SIZE = "ghostPingLogSize"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS = "ignoreChannels"
+DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CATEGORIES = "ignoreCategories"
 
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_ZEIGE_GEISTER_PINGS_OTHER_USER = "zeige_geister_pings_other_user"
 DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_PERMISSIONS_SET_GHOST_DETECTOR_CONFIG = "set_ghost_detector_config"
@@ -62,9 +63,10 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
             client: FlugClient.FlugClient = None,
             channels: FlugChannels.FlugChannels = None,
             roles: FlugRoles.FlugRoles = None, 
-            users: FlugUsers.FlugUsers = None):
+            users: FlugUsers.FlugUsers = None,
+            categories: FlugCategories.FlugCategories = None):
         # setup the super class
-        super().__init__(moduleName, configFilePath, client, channels, roles, users)
+        super().__init__(moduleName, configFilePath, client, channels, roles, users, categories)
         
         # greet-message
         logging.info("I am '%s'! I got initialized with the config file '%s'!" % (self.moduleName, self.configFilePath))
@@ -83,6 +85,15 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
                 self.channels.getChannelName(str(message.channel.id)),
                 self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CHANNELS)):
                 return
+        # check whether the category is known (explicit config exists)
+        if message.channel.category != None:
+            if self.categories.isCategoryKnown(str(message.channel.category.id)):
+                # check whether the category is in the ignore list
+                if util.isInList.isInList(
+                    self.categories.getCategoryName(str(message.channel.category.id)),
+                    self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_GHOST_PING_IGNORE_CATEGORIES)):
+                    return
+            
 
         # get the relevant config values
         self.threshold = self.cfg.c().get(DEFAULT_FLUGVOGEL_GHOSTDETECTOR_CFG_THRESHOLD, DEFAULT_FLUGVOGEL_GHOSTDETECTOR_TRESHOLD)
@@ -137,7 +148,7 @@ class FlugGhostDetector(modules.FlugModule.FlugModule):
 
         embed.description += f"\nAuthor: {message.author.mention}\nDeleted after {difference} seconds\nOriginal Message: "
 
-        if len(embed.description) + len(message.content) >= 2000:
+        if not util.flugTextLength.isMessageLengthValid(embed.description + message.content):
             embed.description += "-- Original Message Too Long --"
         else:
             embed.description += message.content

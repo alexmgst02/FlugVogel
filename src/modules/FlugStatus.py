@@ -5,6 +5,7 @@ import discord
 import modules.FlugModule
 import FlugClient
 import FlugChannels
+import FlugCategories
 import FlugRoles
 import FlugUsers
 import FlugConfig
@@ -15,22 +16,28 @@ DEFAULT_FLUGVOGEL_STATUS_CFG_KEY_STATUS = "status"
 class FlugStatus(modules.FlugModule.FlugModule):
     cfg: FlugConfig.FlugConfig
     status : str = None
+    startupDone : bool = False
 
     def __init__(self, moduleName: str, configFilePath: str,
             client: FlugClient.FlugClient = None,
             channels: FlugChannels.FlugChannels = None,
             roles: FlugRoles.FlugRoles = None, 
-            users: FlugUsers.FlugUsers = None):
+            users: FlugUsers.FlugUsers = None,
+            categories: FlugCategories.FlugCategories = None):
         # setup the super class
-        super().__init__(moduleName, configFilePath, client, channels, roles, users)
+        super().__init__(moduleName, configFilePath, client, channels, roles, users, categories)
 
         # greet-message
         logging.info("I am '%s'! I got initialized with the config file '%s'!" % (self.moduleName, self.configFilePath))
 
     async def set_status_on_ready(self):
-        activity = discord.Game(name=self.status)
-        await self.client.change_presence(activity=activity)
-        logging.info(f"Set status to '{activity.name}'")
+        #don't want to spam the api
+        if not self.startupDone:
+            activity = discord.Game(name=self.status)
+            await self.client.change_presence(activity=activity)
+            logging.info(f"Set status to '{activity.name}'")
+            
+            self.startupDone = True
 
     def setup(self):
         # load the config
