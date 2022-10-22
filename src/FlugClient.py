@@ -19,6 +19,12 @@ class FlugClient(discord.Client):
         glob = self
 
         self.tree = discord.app_commands.CommandTree(self)
+        
+        #error handling
+        @self.tree.error
+        async def on_test_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+            if isinstance(error, discord.app_commands.CommandOnCooldown):
+                await interaction.response.send_message(f"Nicht so schnell🚔! Versuche es in {error.retry_after} Sekunden erneut.", ephemeral=True)
 
     # this function is called by the client internally - don't touch
     async def setup_hook(self):
@@ -26,10 +32,7 @@ class FlugClient(discord.Client):
         self.tree.copy_global_to(guild=self.guildID)
         await self.tree.sync(guild=self.guildID)
 
-    #error handling
-    async def on_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
-        if isinstance(error, discord.app_commands.CommandOnCooldown):
-            await interaction.response.send_message(f"Nicht so schnell🚔! Versuche es in {error.retry_after} Sekunden erneut.", ephemeral=True)
+
 
 
     def subscribeTo(self, eventName: str) -> typing.Callable[[typing.Coroutine], typing.Coroutine]:
