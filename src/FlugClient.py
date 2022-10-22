@@ -22,7 +22,7 @@ class FlugClient(discord.Client):
         
         #error handling
         @self.tree.error
-        async def on_test_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+        async def on_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
             if isinstance(error, discord.app_commands.CommandOnCooldown):
                 await interaction.response.send_message(f"Nicht so schnell🚔! Versuche es in {error.retry_after} Sekunden erneut.", ephemeral=True)
 

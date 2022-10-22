@@ -88,11 +88,14 @@ class CancelTicketButton(discord.ui.Button):
 
             await interaction.followup.send(f"closed ticket for {interaction.user.mention}")
             await self.originalInteraction.delete_original_response()
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "FlugTickets", f"{interaction.user.mention} closed ticket by {self.ticketCreator.mention}  - it remains open to moderators.")
             
         else:
             await interaction.followup.send("closed ticket, deleting channel.")
             await asyncio.sleep(1)
             await self.ticketChannel.delete()
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "FlugTickets", f"{interaction.user.mention} closed ticket by {self.ticketCreator.mention} - channel has been deleted.")
+
 
 
 #Button attached to ticket menu 
