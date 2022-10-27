@@ -58,6 +58,7 @@ class FlugAltklausuren(modules.FlugModule.FlugModule):
 
         # setup the command
         @self.client.tree.command(description="Zeigt einen Verweis zu den Freitagsrunde-Altklausuren (...) zum Modul des aktuellen Kanals.")
+        @discord.app_commands.checks.cooldown(1, 10.0)
         async def altklausuren(interaction: discord.Interaction):
             await interaction.response.defer()
 

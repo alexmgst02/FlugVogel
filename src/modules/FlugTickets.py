@@ -2,6 +2,8 @@ import logging
 import asyncio
 
 import discord
+from discord.ext import commands
+
 import FlugPermissions
 
 import modules.FlugModule
@@ -86,11 +88,14 @@ class CancelTicketButton(discord.ui.Button):
 
             await interaction.followup.send(f"closed ticket for {interaction.user.mention}")
             await self.originalInteraction.delete_original_response()
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "FlugTickets", f"{interaction.user.mention} closed ticket by {self.ticketCreator.mention}  - it remains open to moderators.")
             
         else:
             await interaction.followup.send("closed ticket, deleting channel.")
             await asyncio.sleep(1)
             await self.ticketChannel.delete()
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "FlugTickets", f"{interaction.user.mention} closed ticket by {self.ticketCreator.mention} - channel has been deleted.")
+
 
 
 #Button attached to ticket menu 
@@ -100,6 +105,7 @@ class TicketButton(discord.ui.Button):
     ticketChannel : discord.TextChannel = None
     ticketCreator : discord.Member = None
     permissions : FlugPermissions.FlugPermissions = None
+    cooldown : commands.CooldownMapping = None
 
     def __init__(self, guild : discord.Guild, ticketChannel : discord.TextChannel, logChannel : discord.TextChannel, ticketCreator : discord.Member, permissions : FlugPermissions.FlugPermissions):
         super().__init__(label="🔒Ticket schließen", style=discord.ButtonStyle.gray)
@@ -108,8 +114,16 @@ class TicketButton(discord.ui.Button):
         self.logChannel = logChannel
         self.ticketCreator = ticketCreator
         self.permissions = permissions
+        self.cooldown = commands.CooldownMapping.from_cooldown(1, 10.0, commands.BucketType.member)
 
+   
     async def callback(self, interaction : discord.Interaction):
+        retry = self.cooldown.get_bucket(interaction.message).update_rate_limit()
+        #Check cooldown
+        if retry:
+            await interaction.response.send_message(f"Nicht so schnell. Versuche es in {retry} Sekunden erneut. ", ephemeral=True)
+            return
+
         view = discord.ui.View(timeout=None)
         closeBtn = CancelTicketButton(self.guild, self.ticketChannel, self.logChannel, self.ticketCreator, interaction, self.permissions)
         cancelButton = CancelButton(self.guild, interaction)
@@ -173,7 +187,7 @@ class CreateTicketButton(discord.ui.Button):
         newChannel = await self.ticketCategory.create_text_channel(ticketChannelName)
     
         #get member to set perms
-        member = self.guild.get_member(interaction.user.id)
+        member = interaction.user
 
         #update perms
         await newChannel.set_permissions(member, read_messages=True, send_messages=True)
@@ -329,7 +343,33 @@ class FlugTickets(modules.FlugModule.FlugModule):
         # register the event handler to get the log and ticket channels
         self.client.addSubscriber("on_ready", self.get_channels_on_ready)
         self.client.addSubscriber("on_ready", self.setup_tickets_on_startup)
-      
+
+        #command to add user to a ticket
+        @self.client.tree.command(description="Add user to ticket.")
+        @discord.app_commands.describe(
+            member="Member to add to ticket"
+        )
+        async def add_user_to_ticket(interaction: discord.Interaction, member: discord.Member):
+            await interaction.response.defer(ephemeral=True)
+
+            #check permissiomns
+            if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_TICKETS_CFG_PERMISSION_MANAGE_TICKETS, interaction.user, None,
+            self.permissions, self.logChannel):
+
+                await interaction.followup.send("Du hast keine Befugnise hierfür. Dieser Vorfall wird gemeldet🚔!", ephemeral=True)
+                return
+            
+            #check if channel is ticket channel
+            if interaction.channel.category != self.ticketCategory:
+                await interaction.followup.send("Command only works in sub-channels of ticket category!", ephemeral=True)
+                return
+
+            #add user to ticket
+            await interaction.channel.set_permissions(member, read_messages=True, send_messages=True)
+
+            await interaction.followup.send(f"{member.mention} added to {interaction.channel.mention}.")
+            await interaction.channel.send(f"{member.mention} hat den Raum betreten.")
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "FlugTickets", f"{interaction.user.mention} has added {member.mention} to ticket {interaction.channel.mention}.")
 
         return True
 

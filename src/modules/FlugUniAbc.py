@@ -60,8 +60,8 @@ class FlugUniAbc(modules.FlugModule.FlugModule):
 
         # setup the command
         @self.client.tree.command(description="Zeigt einen Verweis auf das Uni-ABC der Freitagsrunde.")
+        @discord.app_commands.checks.cooldown(1, 5.0)
         async def uniabc(interaction: discord.Interaction):
-            """Plays a fair game of dice."""
             await interaction.response.defer()
 
             # get the name of the channel

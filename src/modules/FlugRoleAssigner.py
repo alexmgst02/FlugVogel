@@ -1,5 +1,6 @@
 import logging
-import time
+import typing
+import asyncio
 import discord
 
 import FlugCategories
@@ -183,6 +184,26 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
 
             await interaction.followup.send(f"Die Rolle {role.name} wurde erfolgreich zugeteilt", ephemeral=True)
             await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Assigned Role", f"{interaction.user.mention} self-assigned Role '{role.name}'.")
+
+
+        @neue_rolle.autocomplete("name")
+        async def roleAutocomplete(interaction: discord.Interaction, current: str) -> typing.List[discord.app_commands.Choice[str]]:
+            roles = []
+
+            for key,value in self.roles.roleConfig.c().items():
+
+                if type(value) != dict:
+                    break
+
+                if self.roles.isRoleAssignable(str(key)):
+                    roleName = discord.utils.get(interaction.guild.roles, id=int(key)).name
+                    roles.append(roleName)
+            
+            return [
+                discord.app_commands.Choice(name=name, value=name)
+                for name in roles if current.lower() in name.lower()
+            ]
+            
 
         return True
 
