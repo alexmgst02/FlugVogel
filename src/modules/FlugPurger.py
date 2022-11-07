@@ -82,10 +82,11 @@ class FlugPurger(modules.FlugModule.FlugModule):
 
         # slash command to purge a specified amount of messages
         @self.client.tree.command(description="purge messages")
-        @discord.app_commands.describe(member="if only messages of a specific user should be deleted",
-                                       limit="if desired give the limit of messages to search through, default is 1",
+        @discord.app_commands.describe(member="user of whom to delete messages (optional)",
+                                       limit="how many messages are to be deleted",
+                                       search_limit="amount of msg to search through if user specified - defaults to limit+100, enter 0 for no limit (slow)",
                                        reason="why purge the shit out of them")
-        async def purge(interaction: discord.Interaction, limit: int=1, reason: str="default", member: discord.Member=None):
+        async def purge(interaction: discord.Interaction, limit: int, search_limit: int=100, reason: str="default", member: discord.Member=None):
             await interaction.response.defer(ephemeral=True)
             if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_USER_PURGE_CFG_PERMISSIONS_PURGE,
                                                                  interaction.user, member, self.permissions, self.logChannel):
@@ -96,27 +97,40 @@ class FlugPurger(modules.FlugModule.FlugModule):
                 await interaction.followup.send("Bitte eine Zahl größer Null eingeben!", ephemeral=True)
                 return
 
-            try:
-                limit = int(limit)
-            except:
-                return await interaction.followup.send("bitte eine ganze Zahl eingeben")
-
             if not member:
                 await interaction.channel.purge(limit=limit)
-                await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Purge", f"{interaction.user.mention}' purged {limit} messages, for reason: {reason}.")  # in channel: <...> is missing currently
+                await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Purge", f"{interaction.user.mention} deleted {limit} messages in {interaction.channel.mention}.\nreason: {reason}.")  # in channel: <...> is missing currently
                 return await interaction.followup.send(f"Es wurden die letzen {limit} Nachrichten gelöscht.")
 
+            #search_limit = amount of messages to grab from channel history
+            if search_limit == 0: 
+                search_limit=None
+            else:
+                search_limit += limit
+
+            #only delete messages from member
             msg = []
-            async for m in interaction.channel.history():
-                if len(msg) == limit:
+            deleted = 0
+            now = datetime.datetime.now(datetime.timezone.utc)
+            twoWeeksAgo = now - datetime.timedelta(days=14)
+            async for m in interaction.channel.history(limit=search_limit, after=twoWeeksAgo, oldest_first=False):
+                if deleted == limit:
                     break
+
                 if m.author == member:
                     msg.append(m)
+                    deleted += 1
 
-            await interaction.channel.delete_messages(msg)
-            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Purge", f"{interaction.user.mention}' purged {limit} messages from {member}, for reason: {reason}.")
+                if len(msg) >= 100:
+                    await interaction.channel.delete_messages(msg)        
+                    msg = []
 
-            return await interaction.followup.send(f"Es wurden {limit} Nachrichten von {member} gelöscht.")
+            if len(msg) > 0:
+                await interaction.channel.delete_messages(msg)
+
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Purge", f"{interaction.user.mention} deleted {deleted} messages from {member} in {interaction.channel.mention}. {search_limit} messages were looked at (None means entire channel history)\nreason: {reason}.")
+
+            return await interaction.followup.send(f"Es wurden {deleted} Nachrichten von {member} gelöscht.")
 
         return True
 
