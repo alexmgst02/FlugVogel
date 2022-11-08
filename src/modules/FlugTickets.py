@@ -60,7 +60,7 @@ class CancelTicketButton(discord.ui.Button):
         #Users with the 'manage_tickets' permission will delete the ticket channel - other users will simply deactivate the ticket and leave the channel open to moderators
         if self.permissions.canDo(DEFAULT_FLUGVOGEL_TICKETS_CFG_PERMISSION_MANAGE_TICKETS, interaction.user, None) < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
             #revoke permissions for ticket creator
-            await self.ticketChannel.set_permissions(self.ticketCreator, read_messages=False, send_messages=False)
+            await self.ticketChannel.set_permissions(interaction.user, read_messages=False, send_messages=False)
             
             #count amount of closed tickets of ticket owner
             max = 1
