@@ -57,38 +57,41 @@ class CancelTicketButton(discord.ui.Button):
     async def callback(self, interaction : discord.Interaction):
         await interaction.response.defer()
 
-        #Users with the 'manage_tickets' permission will delete the ticket channel - other users will simply deactivate the ticket and leave the channel open to moderators
+        #Users with the 'manage_tickets' permission will delete the ticket channel - other users will simply leave/deactivate the ticket and leave the channel open to moderators
         if self.permissions.canDo(DEFAULT_FLUGVOGEL_TICKETS_CFG_PERMISSION_MANAGE_TICKETS, interaction.user, None) < FlugPermissions.FlugPermissions.CAN_DO_WEAK_YES:
             #revoke permissions for ticket creator
             await self.ticketChannel.set_permissions(interaction.user, read_messages=False, send_messages=False)
             
-            #count amount of closed tickets of ticket owner
-            max = 1
-            for channel in self.ticketChannel.category.text_channels:
-                channelName = channel.name
-                channelParts = channelName.split("-")
-                if len(channelParts) < 4:
-                    continue
+            #rename the channel if owner is interaction user
+            if interaction.user == self.ticketCreator:
+                #count amount of closed tickets of ticket owner
+                max = 1
+                for channel in self.ticketChannel.category.text_channels:
+                    channelName = channel.name
+                    channelParts = channelName.split("-")
+                    if len(channelParts) < 4:
+                        continue
 
-                userId = int(channelParts[1])
+                    userId = int(channelParts[1])
 
-                if userId != interaction.user.id:
-                    continue
+                    if userId != interaction.user.id:
+                        continue
 
-                ticketCount = int(channelParts[3])
-                if ticketCount > max:
-                    max = ticketCount
-                elif ticketCount == max:
-                    max += 1
-            
-            #rename the channel
-            newName =  f"ticket-{interaction.user.id}-closed-{max}"
-            await self.ticketChannel.edit(name=newName)
+                    ticketCount = int(channelParts[3])
+                    if ticketCount > max:
+                        max = ticketCount
+                    elif ticketCount == max:
+                        max += 1        
+
+                newName =  f"ticket-{interaction.user.id}-closed-{max}"
+                await self.ticketChannel.edit(name=newName)
+                await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "FlugTickets", f"{interaction.user.mention} closed ticket by {self.ticketCreator.mention}  - it remains open to moderators.")
+            else:
+                await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "FlugTickets", f"{interaction.user.mention} left ticket by {self.ticketCreator.mention}.")
 
 
             await interaction.followup.send(f"closed ticket for {interaction.user.mention}")
             await self.originalInteraction.delete_original_response()
-            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "FlugTickets", f"{interaction.user.mention} closed ticket by {self.ticketCreator.mention}  - it remains open to moderators.")
             
         else:
             await interaction.followup.send("closed ticket, deleting channel.")
