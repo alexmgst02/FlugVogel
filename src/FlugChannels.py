@@ -10,6 +10,7 @@ DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_REPORT = "report"
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_NAME = "name"
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_IS_ROLE_ASSIGNMENT = "isRoleAssignmentChannel"
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_TICKETS = "ticketChannel"
+DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_MEMBER_COUNT = "memberCountChannel"
 
 class FlugChannels:
     _channelConfigPath: dict = None             # store the channel config path
@@ -59,32 +60,30 @@ class FlugChannels:
         
         return cfg.get(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_NAME)
 
-    def getLogChannelId(self) -> int:
-        # get the config for the log channel
-        channelID = self.getChannelConfig(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG)
+    def getChannelId(self, key: str):
+        channelID = self.getChannelConfig(key)
 
         if channelID == None:
             return None
 
-        return int(channelID)
+        return int(channelID)        
+
+    def getLogChannelId(self) -> int:
+        #get the config for the log channel
+        return self.getChannelId(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG)
 
     def getReportChannelId(self) -> int:
         #get the config for the report channel
-        channelId = self.getChannelConfig(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_REPORT)
-
-        if channelId == None:
-            return None
-
-        return int(channelId)
+        return self.getChannelId(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_REPORT)
 
     def getTicketChannelId(self):
-        #get the config for the report channel
-        channelId = self.getChannelConfig(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_TICKETS)
+        #get the config for the ticket channel
+        return self.getChannelId(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_TICKETS)
 
-        if channelId == None:
-            return None
+    def getMemberCountChannelId(self):
+        #get the config for the memberCount statistic channel
+        return self.getChannelId(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_MEMBER_COUNT)
 
-        return int(channelId)
 
     def isChannelRoleAssignment(self, id: str) -> bool:
         if self.isChannelKnown(id):
