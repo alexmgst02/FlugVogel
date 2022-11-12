@@ -43,7 +43,8 @@ class FlugStatistics(modules.FlugModule.FlugModule):
         self.memberCountChannel = self.client.get_channel(self.memberCountChannelId)
 
         #start backlground loop
-        self.statistics.start()
+        if not self.statistics.is_running():
+            self.statistics.start()
 
 
     def setup(self):
