@@ -83,7 +83,7 @@ class FlugStatistics(modules.FlugModule.FlugModule):
         
         return True
     
-    @tasks.loop(seconds=10)
+    @tasks.loop(minutes=3)
     async def statistics(self):
         members = self.guild.member_count
 
