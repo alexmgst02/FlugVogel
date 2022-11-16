@@ -48,6 +48,7 @@ class FlugStudyMode(modules.FlugModule.FlugModule):
         if self.studyModeRole == None:
             logging.critical(f"{self.moduleName} could not load studyModRole.")
 
+        self.startupDone = True
 
     def setup(self):
         # load the config
