@@ -37,7 +37,7 @@ class FlugStatistics(modules.FlugModule.FlugModule):
         logging.info("I am '%s'! I got initialized with the config file '%s'!" % (self.moduleName, self.configFilePath))
 
     async def get_guild_and_log_on_ready(self):
-        self.guild = self.client.get_guild(self.client.guildID.id)
+        self.guild = self.client.getGuild()
 
         self.logChannel = self.client.get_channel(self.logChannelId)
         self.memberCountChannel = self.client.get_channel(self.memberCountChannelId)

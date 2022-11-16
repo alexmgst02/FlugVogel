@@ -34,7 +34,8 @@ class FlugClient(discord.Client):
         self.tree.copy_global_to(guild=self.guildID)
         await self.tree.sync(guild=self.guildID)
 
-
+    def getGuild(self):
+        return self.get_guild(self.guildID.id)
 
 
     def subscribeTo(self, eventName: str) -> typing.Callable[[typing.Coroutine], typing.Coroutine]:
