@@ -88,7 +88,7 @@ class FlugStatistics(modules.FlugModule.FlugModule):
     async def statistics(self):
         members = self.guild.member_count
 
-        if members > self.priorMemberCount:
+        if members != self.priorMemberCount:
             #update the counter
             await self.memberCountChannel.edit(name=f"Total Members: {members}")
 
