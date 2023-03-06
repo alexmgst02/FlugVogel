@@ -4,4 +4,4 @@ __pycache__
 *.backup
 *.pyc
 .idea/
-"src/resources/banners/**"
+*.png
