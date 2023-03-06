@@ -101,7 +101,7 @@ class FlugBannerChanger(modules.FlugModule.FlugModule):
 
         
         return True
-    @tasks.loop(seconds=60)
+    @tasks.loop(hours=24)
     async def changeBannerDynamic(self):
         pathToPic = ""
         present = datetime.datetime.now(datetime.timezone.utc)
