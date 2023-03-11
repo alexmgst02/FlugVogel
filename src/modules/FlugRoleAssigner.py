@@ -147,7 +147,6 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
         @self.client.tree.command(description="Neue Studiengangsrolle wählen")
         @discord.app_commands.describe(
             name="Name der Studiengangsrolle"
-
         )
         async def neue_rolle(interaction: discord.Interaction, name: str):
             await interaction.response.defer(ephemeral=True)
