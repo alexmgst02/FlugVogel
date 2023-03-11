@@ -84,7 +84,6 @@ class FlugChannels:
         #get the config for the memberCount statistic channel
         return self.getChannelId(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_MEMBER_COUNT)
 
-
     def isChannelRoleAssignment(self, id: str) -> bool:
         if self.isChannelKnown(id):
             if self.getChannelConfig(id).get(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_IS_ROLE_ASSIGNMENT, False) == True:
