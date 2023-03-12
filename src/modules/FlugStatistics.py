@@ -146,20 +146,6 @@ class FlugStatistics(modules.FlugModule.FlugModule):
         ###### Regular statistics ######
         @self.client.tree.command(description="Statistiken für einen konfigurierten Zeitraum.")
         async def general_statistics(interaction: discord.Interaction):
-            # (name, id)
-            unknownChannels = []
-
-            # get the current time and the beginning of the stats window
-            now = datetime.datetime.now()
-            begin = now - datetime.timedelta(hours=self.statsWindowH)
-
-            # counters
-            messageCntr = channelCntr = 0
-            channelCntrs = {}  # each channel (by id) will get a message coutner
-            emoteCntrs = {}    # count emote occurances
-            userMsgCntrs = {}  # count messages per user
-            reactionCntrs = {} # count reaction emote occurances
-
             # buy us some time
             await interaction.response.defer(ephemeral=True, thinking=True)
 
@@ -173,6 +159,26 @@ class FlugStatistics(modules.FlugModule.FlugModule):
                 await interaction.followup.send("Die Nutzung dieses Befehls ist für Sie untersagt! Dieser Vorfall wird gemeldet 🚔!")
 
                 return
+
+            # actually generate the statistics
+            await generate_general_statistics()
+
+            await interaction.followup.send(f"Die Statistiken wurden soeben nach {self.statChannel.mention} entsandt!", ephemeral=True)            
+        
+        async def generate_general_statistics():
+            # (name, id)
+            unknownChannels = []
+
+            # get the current time and the beginning of the stats window
+            now = datetime.datetime.now()
+            begin = now - datetime.timedelta(hours=self.statsWindowH)
+
+            # counters
+            messageCntr = channelCntr = 0
+            channelCntrs = {}  # each channel (by id) will get a message coutner
+            emoteCntrs = {}    # count emote occurances
+            userMsgCntrs = {}  # count messages per user
+            reactionCntrs = {} # count reaction emote occurances
 
             logging.info("Starting to read messages for statistics ...")
 
@@ -299,7 +305,6 @@ class FlugStatistics(modules.FlugModule.FlugModule):
 
             ### send it ###
             await self.statChannel.send(embed=embed)
-            await interaction.followup.send(f"Die Statistiken wurden soeben nach {self.statChannel.mention} entsandt!", ephemeral=True)
 
             logging.info(f"Sent statistics to the channel ({self.statChannelId}) ...")
 
