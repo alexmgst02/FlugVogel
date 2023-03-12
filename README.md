@@ -55,18 +55,13 @@ The Channel-Config contains information about channels **FlugVogel** or any of i
          * Optional, if set to true, this option will tell the FlugRoleAssigner
          * module that this channel is used for users picking their roles.
          */
-        "isRoleAssignmentChannel": false
-    },
-    /*
-     * The "log" attribute is used by most modules in this repository the determine
-     * which channel to log to. It must be set to use them.
-     */
-    "log": "6789",
-    /*
-     * The "report" attribute is used by the "FlugMessageReporter" module to determine
-     * which channel to forward message reports to. It must be set to use it.
-     */
-    "report": "1011"
+        "isRoleAssignmentChannel": false,
+        /*
+         * Optional, if set to true, this option will tell FlugStatistics to NOT
+         * scan messages in this channel when generating statistics.
+         */
+        "statsIgnore": true,
+    }
 }
 ```
 **Note** that the name doesn't have to match the actual name of the channel. It should only be used by other parts of **FlugVogel**, such as modules, to search for this channel. Module specific configurations should then only contain the name under which the channel is configured in this file.
