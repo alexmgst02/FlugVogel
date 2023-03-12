@@ -243,7 +243,7 @@ class FlugStatistics(modules.FlugModule.FlugModule):
                             # ignore it
                             continue
 
-                        reactionCntrs.update({emote: emoteCntrs.get(emote, 0) + 1})
+                        reactionCntrs.update({emote: reactionCntrs.get(emote, 0) + 1})
                     
                 # set the channel counter
                 channelCntrs.update({channel.id: channelMsgCntr})
