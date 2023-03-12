@@ -83,7 +83,7 @@ class FlugUserDeactivator(modules.FlugModule.FlugModule):
 
             return False
         # fail if no log channel is configured
-        self.logChannelId = self.channels.getLogChannelId()
+        self.logChannelId = self.channels.getChannelId(FlugChannels.DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG)
 
         if self.logChannelId == None:
             logging.critical(f"No ID found for the Log-Channel '{self.moduleName}'!")
@@ -109,7 +109,12 @@ class FlugUserDeactivator(modules.FlugModule.FlugModule):
         async def activate(interaction : discord.Interaction, member : discord.Member):
             await interaction.response.defer(ephemeral=True, thinking=False)
 
-            if not await util.flugPermissionsHelper.canDoWrapper(DEFAULT_FLUGVOGEL_USER_DEACTIVATOR_CFG_PERMISSIONS_ACTIVATE_USER, interaction.user, member, self.permissions, self.logChannel):
+            allowed = await util.flugPermissionsHelper.canDoWrapper(
+                DEFAULT_FLUGVOGEL_USER_DEACTIVATOR_CFG_PERMISSIONS_ACTIVATE_USER,
+                interaction.user, member, self.permissions, self.logChannel
+            )
+
+            if not allowed:
                 await interaction.followup.send("Die Nutzung dieses Befehls ist für Sie untersagt! Dieser Vorfall wird gemeldet 🚔!")
                 return
 
