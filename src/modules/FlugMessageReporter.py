@@ -59,14 +59,14 @@ class FlugMessageReporter(modules.FlugModule.FlugModule):
             logging.info(f"Config for '{self.moduleName}' has been loaded from '{self.configFilePath}'!")
             
         # fail if no report channel is configured
-        self.reportChannelId = self.channels.getReportChannelId()
+        self.reportChannelId = self.channels.getChannelId(FlugChannels.DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_REPORT)
 
         if self.reportChannelId == None:
             logging.critical(f"No ID found for the Report-Channel '{self.moduleName}'!")
 
             return False
 
-        self.logChannelId = self.channels.getLogChannelId()
+        self.logChannelId = self.channels.getChannelId(FlugChannels.DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG)
 
         if self.logChannelId == None:
             logging.critical(f"No ID found for the log-Channel '{self.moduleName}'!")

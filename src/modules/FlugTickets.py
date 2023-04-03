@@ -300,7 +300,7 @@ class FlugTickets(modules.FlugModule.FlugModule):
             logging.info(f"Config for '{self.moduleName}' has been loaded from '{self.configFilePath}'!")
 
         # load log channel id
-        self.logChannelId = self.channels.getLogChannelId()
+        self.logChannelId = self.channels.getChannelId(FlugChannels.DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG)
 
         if self.logChannelId == None:
             logging.critical(f"{self.moduleName} could not load logChannelId.")
@@ -308,7 +308,7 @@ class FlugTickets(modules.FlugModule.FlugModule):
             return False
 
         #load ticket channel id
-        self.ticketChannelId = self.channels.getTicketChannelId()
+        self.ticketChannelId = self.channels.getChannelId(FlugChannels.DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_TICKETS)
 
         if self.ticketChannelId == None:
             logging.critical(f"{self.moduleName} could not load ticketChannelId.")

@@ -48,7 +48,7 @@ class FlugUniAbc(modules.FlugModule.FlugModule):
             logging.info(f"Config for '{self.moduleName}' has been loaded from '{self.configFilePath}'!")
 
         # fail if no log channel is configured
-        self.logChannelId = self.channels.getLogChannelId()
+        self.logChannelId = self.channels.getChannelId(FlugChannels.DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG)
 
         if self.logChannelId == None:
             logging.critical(f"No ID found for the Log-Channel '{self.moduleName}'!")

@@ -50,7 +50,12 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
             return
 
         # ignore messages outside the designated channel
-        if not self.channels.isChannelRoleAssignment(str(message.channel.id)):
+        channelCfg = self.channels.getChannelConfig(str(message.channel.id))
+
+        if channelCfg == None:
+            return
+
+        if channelCfg.get(FlugChannels.DEFAULT_FLUGVOGEL_CFG_KEY_CHANNEL_IS_ROLE_ASSIGNMENT, False) != True:
             return
 
         # are we allowed to assign a role?
@@ -121,7 +126,7 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
             return False
 
         # fail if no module channel is configured
-        self.logChannelId = self.channels.getLogChannelId()
+        self.logChannelId = self.channels.getChannelId(FlugChannels.DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG)
 
         if self.logChannelId == None:
             logging.critical(f"No ID found for the Log-Channel '{self.moduleName}'!")
@@ -147,7 +152,6 @@ class FlugRoleAssigner(modules.FlugModule.FlugModule):
         @self.client.tree.command(description="Neue Studiengangsrolle wählen")
         @discord.app_commands.describe(
             name="Name der Studiengangsrolle"
-
         )
         async def neue_rolle(interaction: discord.Interaction, name: str):
             await interaction.response.defer(ephemeral=True)

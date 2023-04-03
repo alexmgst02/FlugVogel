@@ -5,12 +5,17 @@ import FlugConfig
 
 import logging
 
+# special channel names
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG = "log"
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_REPORT = "report"
-DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_NAME = "name"
-DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_IS_ROLE_ASSIGNMENT = "isRoleAssignmentChannel"
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_TICKETS = "ticketChannel"
 DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_MEMBER_COUNT = "memberCountChannel"
+DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_STATISTICS = "statistics"
+
+# attributes that channels can have
+DEFAULT_FLUGVOGEL_CFG_KEY_CHANNEL_IS_ROLE_ASSIGNMENT = "isRoleAssignmentChannel"
+DEFAULT_FLUGVOGEL_CFG_KEY_CHANNEL_STATS_IGNORE = "statsIgnore"
+DEFAULT_FLUGVOGEL_CFG_KEY_CHANNEL_NAME = "name"
 
 class FlugChannels:
     _channelConfigPath: dict = None             # store the channel config path
@@ -58,37 +63,12 @@ class FlugChannels:
         if cfg == None:
             return None
         
-        return cfg.get(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_NAME)
+        return cfg.get(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNEL_NAME)
 
-    def getChannelId(self, key: str):
-        channelID = self.getChannelConfig(key)
+    def getChannelId(self, name: str):
+        # reverse lookup - scan values
+        for key, value in self.channelConfig.c().items():
+            if value.get(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNEL_NAME) == name:
+                return int(key)
 
-        if channelID == None:
-            return None
-
-        return int(channelID)        
-
-    def getLogChannelId(self) -> int:
-        #get the config for the log channel
-        return self.getChannelId(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_LOG)
-
-    def getReportChannelId(self) -> int:
-        #get the config for the report channel
-        return self.getChannelId(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_REPORT)
-
-    def getTicketChannelId(self):
-        #get the config for the ticket channel
-        return self.getChannelId(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_TICKETS)
-
-    def getMemberCountChannelId(self):
-        #get the config for the memberCount statistic channel
-        return self.getChannelId(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_MEMBER_COUNT)
-
-
-    def isChannelRoleAssignment(self, id: str) -> bool:
-        if self.isChannelKnown(id):
-            if self.getChannelConfig(id).get(DEFAULT_FLUGVOGEL_CFG_KEY_CHANNELS_IS_ROLE_ASSIGNMENT, False) == True:
-                return True
-        
-        return False 
-
+        return None
