@@ -163,7 +163,9 @@ class FlugStatistics(modules.FlugModule.FlugModule):
             # actually generate the statistics
             await generate_general_statistics()
 
-            await interaction.followup.send(f"Die Statistiken wurden soeben nach {self.statChannel.mention} entsandt!", ephemeral=True)            
+            await interaction.followup.send(f"Die Statistiken wurden soeben nach {self.statChannel.mention} entsandt!", ephemeral=True)  
+
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, self.moduleName, f"{interaction.user.mention} requested general statistics. They have been sent to {self.statChannel.mention}")          
         
         async def generate_general_statistics():
             # (name, id)
@@ -185,7 +187,7 @@ class FlugStatistics(modules.FlugModule.FlugModule):
             ### message scanning/"stuff" counting ###
             # iterate over and filter channels
             channel : discord.channel.TextChannel
-            for channel in self.client.getGuild().text_channels:
+            for channel in self.guild.text_channels:
                 # keep track of the messages for this channel
                 channelMsgCntr = 0
 
