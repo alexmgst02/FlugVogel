@@ -91,16 +91,16 @@ class FlugAltklausuren(modules.FlugModule.FlugModule):
                     await interaction.followup.send(embed=embed)
 
                     await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "👍 Successful Altklausuren Request 👍",
-                        f"'{interaction.user.name}' ({interaction.user.mention}) requested" +
-                        f" Altklausuren in the channel '{interaction.channel.name}' ({interaction.channel.mention})"
+                        f"{interaction.user.mention} requested" +
+                        f" Altklausuren in the channel {interaction.channel.mention}"
                     )
 
                     return
 
             # no link found
             await util.logHelper.logToChannelAndLog(self.logChannel, logging.WARNING, "🚧 Invalid Altklausuren Request 🚧",
-                f"'{interaction.user.name}' ({interaction.user.mention}) tried to request" +
-                f"Altklausuren in a channel without a Altklausurenlink: '{interaction.channel.name}' ({interaction.channel.mention})"
+                f"{interaction.user.mention} tried to request" +
+                f"Altklausuren in a channel without a Altklausurenlink: {interaction.channel.mention}"
             )
 
             embed = discord.Embed(color=discord.Colour.red(), title="💢 Für diesen Kanal ist kein Altklausurenverweis konfiguriert! 💢")
