@@ -348,7 +348,8 @@ class FlugStatistics(modules.FlugModule.FlugModule):
         embed.add_field(name="Reaktionen", value=reactionRankingStr, inline=False)
         embed.set_footer(text=self.oneliners[random.randrange(0, len(self.oneliners))])
 
-        # set the timestampembed.timestamp = now
+        # set the timestamp
+        embed.timestamp = now
 
         logging.info("Built statistics-embed ...")
 
