@@ -162,9 +162,6 @@ class FlugVoter(modules.FlugModule.FlugModule):
                     return
         
 
-            #increment users vote count
-            self.voteCount.update({str(interaction.user.id):voteAmount+1})
-
             #embed for interaction response
             embed = discord.Embed(color=discord.Color.dark_grey())
             embed.set_author(name=interaction.user.name)
@@ -180,6 +177,9 @@ class FlugVoter(modules.FlugModule.FlugModule):
             if not util.flugTextLength.isMessageLengthValid(embed.description):
                 logging.critical(f"{self.moduleName} could not build embed.")
                 return 
+
+            #increment users vote count
+            self.voteCount.update({str(interaction.user.id):voteAmount+1})
 
             #view for the response - One button for each option
             view = util.flugVoterHelper.VoteView(interaction, options)
@@ -201,8 +201,8 @@ class FlugVoter(modules.FlugModule.FlugModule):
             await originalResponse.edit(embed=embed, view=view)
             
 
-            #user vote count is back to prior value
-            self.voteCount.update({str(interaction.user.id):voteAmount})
+            #user vote count minus one
+            self.voteCount.update({str(interaction.user.id):self.voteCount.get(str(interaction.user.id))-1})
 
             await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, "Vote ended",
              f"Vote from {interaction.user.mention} ended in {interaction.channel.mention}")            

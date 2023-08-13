@@ -25,6 +25,7 @@ DEFAULT_FLUGVOGEL_BANNER_CHANGER_CFG_MANAGE = "configure_banner"
 DEFAULT_FLUGVOGEL_BANNER_CHANGER_CFG_DYNAMIC_TIME_KEY = "dynamicSunBasedTimes"
 DEFAULT_FLUGVOGEL_BANNER_CHANGER_CFG_PATH_DAYBANNER = "pathToDayBanner"
 DEFAULT_FLUGVOGEL_BANNER_CHANGER_CFG_PATH_NIGHTBANNER = "pathToNightBanner"
+DEFAULT_FLUGVOGEL_BANNER_CHANGER_WAIT_TIME = 26000
 
 class FlugBannerChanger(modules.FlugModule.FlugModule):
     cfg: FlugConfig.FlugConfig
@@ -126,14 +127,14 @@ class FlugBannerChanger(modules.FlugModule.FlugModule):
                 await interaction.response.send_message("Automatic banner change has been disabled", ephemeral=True)
                 return
 
-            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, f"{self.moduleName}", f"Automatic banner change has been enabled by {interaction.user.mention}")
+            
             self.changeBannerDynamic.start()
+            await util.logHelper.logToChannelAndLog(self.logChannel, logging.INFO, f"{self.moduleName}", f"Automatic banner change has been enabled by {interaction.user.mention}")
             await interaction.response.send_message("Automatic banner change has been enabled", ephemeral=True)
 
         return True
     @tasks.loop(hours=24)
     async def changeBannerDynamic(self):
-        pathToPic = ""
         present = datetime.datetime.now(datetime.timezone.utc)
         tmrw = present + datetime.timedelta(days=1)
         berlin = LocationInfo("Berlin")
@@ -145,6 +146,11 @@ class FlugBannerChanger(modules.FlugModule.FlugModule):
         sunriseDiff = (sunrise - present).total_seconds()
         sunsetDiff = (sunset - present).total_seconds()
         
+        """
+        When sunriseDiff > 0, the next banner change will occur at sunrise.
+        Same for sunsetDiff. If the bot restarts after sunset has occured, it will wait for
+        DEFAULT_FLUGVOGEL_BANNER_CHANGER_WAIT_TIME seconds and restart the loop.
+        """
         if sunriseDiff > 0:
             waitTimeOne = sunriseDiff
             waitTimeTwo = (sunset - sunrise).total_seconds()
@@ -158,13 +164,17 @@ class FlugBannerChanger(modules.FlugModule.FlugModule):
             pathToPicTwo = self.dayBannerPath
 
         else:
-            await asyncio.sleep(60*60*9)
+            await asyncio.sleep(DEFAULT_FLUGVOGEL_BANNER_CHANGER_WAIT_TIME)
             self.changeBannerDynamic.restart()
             return
 
-
+        """
+        dict containing the time in seconds until the next 2 banner changes
+        and the corresponding image paths
+        """
         timesWithPath = {waitTimeOne:pathToPicOne,
                           waitTimeTwo:pathToPicTwo}
+
 
         for waitTime, path in timesWithPath.items():
 
